@@ -55,11 +55,9 @@ class _LoginFormState extends State<LoginForm> {
             String username = _usernameController.text;
             String password = _passwordController.text;
 
-            // Call login function from LoginService
             String? token = await loginService.loginUser(username, password);
 
             if (token != null) {
-              // If login successful, store the token and navigate to home page
               await loginService.saveToken(token);
               Navigator.pushReplacement(
                 context,

@@ -11,7 +11,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Your App',
+      title: 'AidLink',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
@@ -36,7 +36,6 @@ class _AppStartState extends State<AppStart> {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     final String? userToken = prefs.getString('user_token');
 
-    // Determine where to navigate based on the presence of user_token
     Widget _startScreen;
     if (userToken != null) {
       _startScreen = HomePage();
@@ -44,7 +43,7 @@ class _AppStartState extends State<AppStart> {
       _startScreen = LoginPage();
     }
 
-    // Navigate to the determined screen
+
     Future.delayed(Duration.zero, () {
       Navigator.pushReplacement(
         context,
@@ -57,7 +56,7 @@ class _AppStartState extends State<AppStart> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
-        child: CircularProgressIndicator(), // Display a loader while checking login status
+        child: CircularProgressIndicator(),
       ),
     );
   }

@@ -8,7 +8,7 @@ class LoginService {
 
   Future<String?> loginUser(String username, String password) async {
     try {
-      final Uri loginUri = Uri.parse("http://192.168.29.199:8000/api/auth/login/");
+      final Uri loginUri = Uri.parse("${Constants.apiUrl}/api/auth/login/");
       print("works till here");
 
       final response = await http.post(loginUri,
@@ -18,7 +18,7 @@ class LoginService {
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseData = json.decode(response.body);
-        final String token = responseData['token']; // Change 'token' to your token key
+        final String token = responseData['token'];
         await saveToken(token);
         return token;
       } else {
