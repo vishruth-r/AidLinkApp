@@ -37,6 +37,12 @@ dependencies:
   cupertino_icons: ^1.0.2
   http: ^0.13.6
   shared_preferences: ^2.2.2
+  url_launcher: ^6.1.11
+  firebase_messaging: ^14.7.9
+  firebase_core: ^2.24.2
+  geolocator: ^10.1.0
+  location: ^5.0.3
+  slider_button: ^2.0.0
 
 dev_dependencies:
   flutter_test:

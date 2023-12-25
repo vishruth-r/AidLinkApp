@@ -1,9 +1,14 @@
-import 'package:aidlink/screens/home_page.dart';
+import 'package:aidlink/screens/FR/home_page.dart';
 import 'package:aidlink/screens/login_page.dart';
+import 'package:aidlink/services/location_service.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'screens/DR/admin_alerts_page.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
   runApp(MyApp());
 }
 
@@ -14,50 +19,37 @@ class MyApp extends StatelessWidget {
       title: 'AidLink',
       theme: ThemeData(
         primarySwatch: Colors.blue,
+
       ),
-      home: AppStart(),
-    );
-  }
-}
+      home: FutureBuilder<String>(
+        future: _getUserType(),
+        builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Scaffold(
+              body: Center(child: CircularProgressIndicator()),
+            );
+          } else {
+            if (snapshot.hasData) {
 
-class AppStart extends StatefulWidget {
-  @override
-  _AppStartState createState() => _AppStartState();
-}
+              if (snapshot.data == 'F') {
+                LocationService().startSendingLocation();
+                return HomePage();
+              }
+              else if (snapshot.data == 'A') {
 
-class _AppStartState extends State<AppStart> {
-  @override
-  void initState() {
-    super.initState();
-    checkLoginStatus();
-  }
-
-  Future<void> checkLoginStatus() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    final String? userToken = prefs.getString('user_token');
-
-    Widget _startScreen;
-    if (userToken != null) {
-      _startScreen = HomePage();
-    } else {
-      _startScreen = LoginPage();
-    }
-
-
-    Future.delayed(Duration.zero, () {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => _startScreen),
-      );
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: CircularProgressIndicator(),
+                LocationService().startSendingLocation();
+                return AdminAlertsPage();
+              }
+            }
+          }
+          return LoginPage();
+        },
       ),
     );
+  }
+
+  Future<String> _getUserType() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString('type') ?? '';
   }
 }

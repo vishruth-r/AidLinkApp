@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "594393011949",
+    "project_id": "resq-14587",
+    "storage_bucket": "resq-14587.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:594393011949:android:c8921136b0ea911e8adee4",
+        "android_client_info": {
+          "package_name": "com.example.aidlink"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAdhi8U46IgupzdtAZD0LuaIKdwrXnxl0k"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
