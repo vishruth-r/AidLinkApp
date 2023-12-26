@@ -8,17 +8,15 @@ import '../constants.dart';
 import 'location_service.dart';
 
 class LoginService {
-  Future<String?> loginUser(String username, String password) async {
+  Future<Map<String, String>?> loginUser(String username, String password) async {
     try {
       final Uri loginUri = Uri.parse("${Constants.apiUrl}/api/crfr/users/signin/");
-
 
       String? fcmToken = await FirebaseMessaging.instance.getToken();
       print('FCM Token: $fcmToken');
 
       LocationData? location = await LocationService().determineLocation();
       if (fcmToken != null && location != null) {
-
         final response = await http.post(
           loginUri,
           body: jsonEncode({
@@ -44,11 +42,11 @@ class LoginService {
           if (authToken != null) {
             LocationService().startSendingLocation();
           }
-          return authToken;
+
+          return {'authToken': authToken, 'type': type};
         } else {
           print(response.statusCode);
           print(response.body);
-
           return null;
         }
       } else {

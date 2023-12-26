@@ -1,4 +1,7 @@
+import 'package:aidlink/screens/FR/view_alerts_fr.dart';
+import 'package:aidlink/screens/login_page.dart';
 import 'package:aidlink/services/FR_services.dart';
+import 'package:aidlink/services/login_services.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 
@@ -14,8 +17,51 @@ class _HomePage extends State<HomePage> {
       appBar: AppBar(
 
         title: Text('Your Page'),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.list),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ViewAlertsFR(),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+      drawerEnableOpenDragGesture: false, // Disable opening drawer by sliding
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            DrawerHeader(
+              decoration: BoxDecoration(
+                color: Colors.blue,
+              ),
+              child: Text(
+                'Drawer Header',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                ),
+              ),
+            ),
+            ListTile(
+              title: Text('Logout'),
+              onTap: () {
+                LoginService().logoutUser();
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (context) => LoginPage()),
+                      (route) => false,
+                );
 
-
+              },
+            ),
+          ],
+        ),
       ),
       body: Center(
         child: Column(

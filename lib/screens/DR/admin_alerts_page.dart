@@ -1,256 +1,332 @@
+import 'package:aidlink/services/admin_services.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../services/FR_services.dart';
+import '../widgets/bottom_app_bar.dart';
 
-void main() {
-  runApp(MyApp());
+class AdminAlertsPage extends StatefulWidget {
+  @override
+  _AdminAlertsPageState createState() => _AdminAlertsPageState();
 }
 
-class MyApp extends StatelessWidget {
+class _AdminAlertsPageState extends State<AdminAlertsPage> {
+  FRServices _frServices = FRServices();
+  MapService _mapService = MapService();
+
+
+  List<Map<String, dynamic>> emergencyAlerts = [];
+  List<Map<String, dynamic>> bleedingAlerts = [];
+  List<Map<String, dynamic>> dehydrationAlerts = [];
+  List<Map<String, dynamic>> socialThreatAlerts = [];
+
+  int _currentIndex = 0;
+
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Admin Alerts Page',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: AdminAlertsPage(),
-    );
+  void initState() {
+    super.initState();
+    _fetchAlerts();
   }
-}
 
-class AdminAlertsPage extends StatelessWidget {
-  List<Map<String, dynamic>> alerts = [
+  Future<void> _fetchAlerts() async {
+    try {
+      List<Map<String, dynamic>>? fetchedAlerts = await _frServices
+          .getFRAlerts();
+      if (fetchedAlerts != null) {
+        setState(() {
+          // Filter alerts according to their types
+          emergencyAlerts =
+              fetchedAlerts.where((alert) => alert['type'] == 1).toList();
+          bleedingAlerts =
+              fetchedAlerts.where((alert) => alert['type'] == 2).toList();
+          dehydrationAlerts =
+              fetchedAlerts.where((alert) => alert['type'] == 3).toList();
+          socialThreatAlerts =
+              fetchedAlerts.where((alert) => alert['type'] == 4).toList();
+        });
+      }
+    } catch (e) {
+      print('Exception while fetching alerts: $e');
+    }
+  }
 
-    {
-      'alertStatus': 'New',
-      'aidStationName': 'Aid Station 1',
-      'alertDescription': 'Description for New Alert 1Description for New Alert 1Description for New Alert 1Description for New Alert 1Description for New Alert 1Description for New Alert 1',
-      'bibNumber': '123',
-      'alertTime': null,
-      'alertType': 'Red',
-      'phoneNumber': '1234567890',
-      'latlng': '40.7128, -74.0060',
-      'ambulanceNumber':'999999999'
-    },
-    {
-      'alertStatus': 'New',
-      'aidStationName': 'Aid Station 2',
-      'alertDescription': 'Description for New Alert 2',
-      'bibNumber': '456',
-      'alertTime': '09:15 AM',
-      'alertType': 'Orange',
-      'phoneNumber': '9876543210',
-      'latlng': '40.7128, -74.0060'
-    },
-    {
-      'alertStatus': 'Responded',
-      'aidStationName': 'Aid Station 3',
-      'alertDescription': 'Description for Active Alert 1',
-      'bibNumber': '789',
-      'alertTime': '09:30 AM',
-      'alertType': 'Blue',
-      'phoneNumber': '1112223333',
-      'latlng': '40.7128, -74.0060'
-    },
-    {
-      'alertStatus': 'Closed',
-      'aidStationName': 'Aid Station 4',
-      'alertDescription': 'Description for Closed Alert 1',
-      'bibNumber': '321',
-      'alertTime': '09:45 AM',
-      'alertType': 'Green',
-      'phoneNumber': '4445556666',
-      'latlng': '40.7128, -74.0060'
-    },
-  ];
   @override
   Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: 3,
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text('Admin Alerts'),
-          bottom: TabBar(
-            tabs: [
-              Tab(text: 'New'),
-              Tab(text: 'Active'),
-              Tab(text: 'Closed'),
-            ],
-          ),
-        ),
-        body: TabBarView(
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Admin Alerts Page'),
+      ),
+      body: DefaultTabController(
+        length: 4,
+        child: Column(
           children: [
-            _buildAlertsList(context, 'New'),
-            _buildAlertsList(context, 'Active'),
-            _buildAlertsList(context, 'Closed'),
+            TabBar(
+              labelColor: Colors.black,
+              unselectedLabelColor: Colors.grey,
+              indicatorColor: Colors.blue,
+              indicatorWeight: 2.0,
+              tabs: [
+                Tab(text: 'Emergency',
+                    icon: Icon(Icons.warning, color: Colors.red)),
+                Tab(text: 'Bleeding',
+                    icon: Icon(Icons.local_hospital, color: Colors.orange)),
+                Tab(text: 'Dehydration',
+                    icon: Icon(Icons.water_drop_outlined, color: Colors.blue)),
+                Tab(text: 'Social Threat',
+                    icon: Icon(Icons.group, color: Colors.green)),
+              ],
+            ),
+            Expanded(
+              child: TabBarView(
+                children: [
+                  _buildAlertsList(emergencyAlerts),
+                  _buildAlertsList(bleedingAlerts),
+                  _buildAlertsList(dehydrationAlerts),
+                  _buildAlertsList(socialThreatAlerts),
+                ],
+              ),
+            ),
           ],
         ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () {
-            // Action for floating button
+      ),
+      bottomNavigationBar: CustomBottomAppBar(
+        currentIndex: _currentIndex,
+        onPressed: [
+              () {
+            // Handle Home button tap
+            setState(() {
+              _currentIndex = 0;
+            });
           },
-          child: Icon(Icons.add),
-        ),
-        floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-        bottomNavigationBar: BottomAppBar(
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: <Widget>[
-              IconButton(
-                icon: Icon(Icons.menu),
-                onPressed: () {
-                  // Action for menu button
-                },
-              ),
-              IconButton(
-                icon: Icon(Icons.search),
-                onPressed: () {
-                  // Action for search button
-                },
-              ),
-              IconButton(
-                icon: Icon(Icons.settings),
-                onPressed: () {
-                  // Action for settings button
-                },
-              ),
-              IconButton(
-                icon: Icon(Icons.notifications),
-                onPressed: () {
-                  // Action for notifications button
-                },
-              ),
-            ],
-          ),
-        ),
+              () {
+            // Handle Search button tap
+            setState(() {
+              _currentIndex = 1;
+            });
+          },
+              () {
+            // Handle Favorite button tap
+            setState(() {
+              _currentIndex = 2;
+            });
+          },
+              () {
+            // Handle Profile button tap
+            setState(() {
+              _currentIndex = 3;
+            });
+          },
+        ],
       ),
     );
   }
 
-  Widget _buildAlertsList(BuildContext context, String status) {
-    // Filter alerts based on the selected status
-    List<Map<String, dynamic>> filteredAlerts =
-    alerts.where((alert) => alert['alertStatus'] == status).toList();
-
+  @override
+  Widget _buildAlertsList(List<Map<String, dynamic>> alerts) {
+    if (alerts.isEmpty) {
+      return Center(
+        child: Text('No alerts found'),
+      );
+    }
     return ListView.builder(
-      itemCount: filteredAlerts.length,
+      itemCount: alerts.length,
       itemBuilder: (context, index) {
-        String alertType = filteredAlerts[index]['alertType'];
-        Color cardColor = _getColorByAlertType(alertType);
-
-        bool hasAmbulanceNumber = filteredAlerts[index].containsKey('ambulanceNumber');
-        IconData ambulanceIcon = Icons.local_hospital; // Default ambulance icon
-
-        if (hasAmbulanceNumber) {
-          ambulanceIcon = Icons.local_hospital; // Change to desired ambulance icon
-        }
-
+        final alert = alerts[index];
         return Card(
           margin: EdgeInsets.all(8.0),
-          color: cardColor.withOpacity(0.6),
-          child: Padding(
-            padding: EdgeInsets.all(8.0),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
+          elevation: 4.0,
+          child: ListTile(
+            title: Text('ID: ${alert['id']}'),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        filteredAlerts[index]['aidStationName'],
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                      SizedBox(height: 5),
-                      Text('${filteredAlerts[index]['alertDescription']}',
-                        style: TextStyle(
-                          color: Colors.white,
-                        ),
-                      ),
-                      Text('${filteredAlerts[index]['bibNumber']}',
-                        style: TextStyle(
-                          color: Colors.white,
-                        ),
-                      ),
-                      Text(
-                        '${filteredAlerts[index]['alertTime']}',
-                        style: TextStyle(
-                          color: Colors.white,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                IconButton(
-                  onPressed: () {
-                    _openMap(filteredAlerts[index]['latlng']);
-                  },
-                  icon: Icon(
-                    Icons.location_on,
-                    color: Colors.white,
-                  ),
-                ),
-                if (hasAmbulanceNumber)
-                  IconButton(
-                    onPressed: () {
-                      _makePhoneCall(filteredAlerts[index]['ambulanceNumber']);
-                    },
-                    icon: Icon(
-                      ambulanceIcon,
-                      color: Colors.white,
+                Text('At: ${alert['at']}'),
+                Text('Status: ${alert['status']}'),
+                Text('FR Name: ${alert['FRname']}'),
+                Text('Ambulance Mobile: ${
+                    alert['ambulance'] is Map<String, dynamic>
+                        ? alert['ambulance']['mobile'] ?? 'Not assigned'
+                        : 'Not assigned'
+                }'),
+                Row(
+                  children: [
+                    IconButton(
+                      icon: Icon(Icons.navigation, color: Colors.blue,),
+                      onPressed: () {
+                        String latLong = '${alert['location'][1]},${alert['location'][0]}';
+                        _launchMaps(latLong);
+                      },
                     ),
-                  ),
-                IconButton(
-                  onPressed: () {
-                    _makePhoneCall(filteredAlerts[index]['phoneNumber']);
-                  },
-                  icon: Icon(
-                    Icons.phone,
-                    color: Colors.white,
-                  ),
+                    SizedBox(width: 16.0),
+                    IconButton(
+                      icon: Icon(Icons.phone, color: Colors.green),
+                      onPressed: () {
+                        _makePhoneCall(alert['FRmobile']);
+                      },
+                    ),
+                  ],
                 ),
               ],
             ),
+            onTap: () async {
+              if (alert['ambulance'] != null) {
+                final ambulance = alert['ambulance'];
+                print("works ambu");
+                showModalBottomSheet<void>(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return _buildAmbulanceCard(ambulance);
+                  },
+                );
+              }
+              else {
+                List<Map<String, dynamic>>? ambulanceDetails = await _mapService
+                    .getUsersList(
+                  fr: false,
+                  am: true,
+                  ad: false,
+                  al: false,
+                );
+
+                showModalBottomSheet<void>(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return _buildAmbulanceDetails(
+                      ambulanceDetails,
+                      alert['id'],
+                      alert['status'],
+                    );
+                  },
+                );
+              }
+            },
           ),
         );
       },
     );
   }
 
-  Color _getColorByAlertType(String alertType) {
-    switch (alertType) {
-      case 'Red':
-        return Colors.red;
-      case 'Orange':
-        return Colors.orange;
-      case 'Blue':
-        return Colors.blue;
-      case 'Green':
-        return Colors.green;
-      default:
-        return Colors.grey;
+  Widget _buildAmbulanceCard(Map<String, dynamic> ambulance) {
+    print("works ambul");
+    return Card(
+      margin: EdgeInsets.all(8.0),
+      elevation: 4.0,
+      child: ListTile(
+        title: Text('Ambulance ID: ${ambulance['id']}'),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Ambulance Number: ${ambulance['number']}'),
+            Text('Ambulance Type: ${ambulance['type']}'),
+            Row(
+              children: [
+                IconButton(
+                  icon: Icon(Icons.phone, color: Colors.green),
+                  onPressed: () {
+                    _makePhoneCall(ambulance['mobile']);
+                  },
+                ),
+                SizedBox(width: 16.0),
+                IconButton(
+                  icon: Icon(Icons.navigation, color: Colors.blue,),
+                  onPressed: () {
+                    String latLong = '${ambulance['location'][1]},${ambulance['location'][0]}';
+                    _launchMaps(latLong);
+                  },
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+
+  void _launchMaps(String latLong) async {
+    String mapsUrl = 'https://www.google.com/maps/search/?api=1&query=$latLong';
+    if (await canLaunch(mapsUrl)) {
+      await launch(mapsUrl);
+    } else {
+      throw 'Could not launch $mapsUrl';
     }
   }
 
-  Future<void> _makePhoneCall(String phoneNumber) async {
-    final String url = 'tel:$phoneNumber';
-    if (await canLaunch(url)) {
-      await launch(url);
+  void _makePhoneCall(String phoneNumber) async {
+    print("Phone number: $phoneNumber");
+    String phoneUrl = 'tel:$phoneNumber';
+    if (await canLaunch(phoneUrl)) {
+      await launch(phoneUrl);
     } else {
-      throw 'Could not launch $url';
+      throw 'Could not launch $phoneUrl';
     }
   }
 
-  Future<void> _openMap(String latLng) async {
-    final String url = 'https://www.google.com/maps/search/?api=1&query=$latLng';
-    if (await canLaunch(url)) {
-      await launch(url);
-    } else {
-      throw 'Could not launch $url';
-    }
+  Widget _buildAmbulanceDetails(List<Map<String, dynamic>>? ambulanceDetails,
+      String alertID, int alertStatus) {
+    int currentStatus = alertStatus;
+    return Container(
+      padding: EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            'Alert ID: $alertID',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 18.0,
+            ),
+          ),
+          SizedBox(height: 16.0),
+          Column(
+            children: [
+              Text(
+                'Alert Status: $currentStatus',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16.0,
+                ),
+              ),
+              SizedBox(height: 16.0),
+              Row(
+                children: [
+                  // Existing code remains the same
+                ],
+              ),
+            ],
+          ),
+          SizedBox(height: 16.0),
+          Flexible(
+            child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: ambulanceDetails?.length ?? 0,
+              itemBuilder: (context, index) {
+                final ambulance = ambulanceDetails?[index];
+                return ListTile(
+                  title: Text('${ambulance?['name'] ?? ''}'),
+                  subtitle: ElevatedButton(
+                    onPressed: () {
+                      _makePhoneCall(ambulance?['mobile'] ?? '');
+                    },
+                    child: Icon(Icons.phone),
+                  ),
+                  trailing: ElevatedButton(
+                    onPressed: () {
+                      if (ambulance != null && alertID != null) {
+                        String ambulanceID = ambulance['id'] ??
+                            ''; // Assuming the ambulance ID is stored in 'id' field
+                        _mapService.assignAmbulanceToAlert(
+                            alertID, ambulanceID);
+                      }
+                    },
+                    child: Text('Assign'),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

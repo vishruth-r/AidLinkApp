@@ -1,3 +1,5 @@
+import 'package:aidlink/screens/AM/ambulance_page.dart';
+import 'package:aidlink/screens/DR/admin_alerts_page.dart';
 import 'package:flutter/material.dart';
 import '../services/login_services.dart';
 import 'FR/home_page.dart';
@@ -55,13 +57,39 @@ class _LoginFormState extends State<LoginForm> {
             String username = _usernameController.text;
             String password = _passwordController.text;
 
-            String? token = await loginService.loginUser(username, password);
+            Map<String, String>? userData = await loginService.loginUser(username, password);
 
-            if (token != null) {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => HomePage()),
-              );
+            if (userData != null) {
+              String? userType = userData['type'];
+
+              if (userType != null) {
+                if (userType == 'F') {
+                  // Navigate to admin page
+                  // Replace AdminPage with your intended admin page
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => HomePage()),
+                  );
+                } else if (userType == 'A') {
+                  // Navigate to user page
+                  // Replace UserPage with your intended user page
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => AmbulancePage()),
+                  );
+                }
+                else if (userType == 'D') {
+                  // Navigate to user page
+                  // Replace UserPage with your intended user page
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => AdminAlertsPage()),
+                  );
+                }
+                else {
+                  // Handle other user types or show an error
+                }
+              }
             } else {
               showDialog(
                 context: context,

@@ -1,3 +1,4 @@
+import 'package:aidlink/screens/AM/ambulance_page.dart';
 import 'package:aidlink/screens/FR/home_page.dart';
 import 'package:aidlink/screens/login_page.dart';
 import 'package:aidlink/services/location_service.dart';
@@ -30,15 +31,22 @@ class MyApp extends StatelessWidget {
             );
           } else {
             if (snapshot.hasData) {
+              print(snapshot.data);
 
               if (snapshot.data == 'F') {
                 LocationService().startSendingLocation();
                 return HomePage();
               }
-              else if (snapshot.data == 'A') {
-
+              else if (snapshot.data == 'D') {
                 LocationService().startSendingLocation();
                 return AdminAlertsPage();
+              }
+              else if (snapshot.data == 'A') {
+                LocationService().startSendingLocation();
+                return AmbulancePage();
+              }
+              else {
+                return LoginPage();
               }
             }
           }
