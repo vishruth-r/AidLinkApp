@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:location/location.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:intl/intl.dart'; // Import the intl package for date formatting
+import 'package:intl/intl.dart';
 
 
 import '../constants.dart';
@@ -56,7 +56,6 @@ class FRServices {
         return false;
       }
     } catch (e) {
-
       print('Exception while sending alert: $e');
     }
     return false;
@@ -89,18 +88,23 @@ class FRServices {
 
           formattedAlerts.add({
             'id': alert['_id'],
+            'title': alert['title'],
+            'statusDescription': alert['statusdescription'],
             'at': formattedDate,
             'type': alertType,
             'status' : alert['status'],
-            'FRname'  : alert['by']['name'],
-            'FRmobile' : alert['by']['mobile'],
+            'name'  : alert['by']['name'],
+            'mobile' : alert['by']['mobile'],
             'location' : alert['from'],
             'ambulance' : alert['ambulance'] ?? 'Not assigned',
+            'statusdescription' : alert['statusdescription'],
+            'docstatus' : alert['docstatus']['status'],
+            'docstatusdescription' : alert['docstatus']['description'],
           });
         }
 
         print('Formatted alerts: $formattedAlerts');
-        return formattedAlerts; // Return the fetched alerts
+        return formattedAlerts;
       } else {
         print('Failed to fetch alerts. Status code: ${response.statusCode}');
         return null; // Return null in case of failure
@@ -113,7 +117,7 @@ class FRServices {
 
   String formatDateTime(String dateTimeString) {
     DateTime dateTime = DateTime.parse(dateTimeString);
-    return DateFormat('HH:mm dd/MM/yyyy').format(dateTime.toLocal());
+    return DateFormat('hh:mm a').format(dateTime.toLocal());
   }
 
 }

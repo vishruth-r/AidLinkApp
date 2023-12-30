@@ -1,6 +1,7 @@
 import 'package:aidlink/screens/AM/ambulance_page.dart';
 import 'package:aidlink/screens/FR/home_page.dart';
 import 'package:aidlink/screens/login_page.dart';
+import 'package:aidlink/services/fcm_services.dart';
 import 'package:aidlink/services/location_service.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -10,6 +11,8 @@ import 'screens/DR/admin_alerts_page.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+  FirebaseMessagingService messagingService = FirebaseMessagingService();
+  await messagingService.configureFirebaseMessaging();
   runApp(MyApp());
 }
 
@@ -32,8 +35,7 @@ class MyApp extends StatelessWidget {
           } else {
             if (snapshot.hasData) {
               print(snapshot.data);
-
-              if (snapshot.data == 'F') {
+              if (snapshot.data == 'F' || snapshot.data == 'R') {
                 LocationService().startSendingLocation();
                 return HomePage();
               }
@@ -53,6 +55,7 @@ class MyApp extends StatelessWidget {
           return LoginPage();
         },
       ),
+      debugShowCheckedModeBanner: false,
     );
   }
 

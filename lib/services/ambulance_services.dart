@@ -26,7 +26,6 @@ class AmbulanceServices {
 
     if (response.statusCode == 200) {
       dynamic responseData = json.decode(response.body);
-
       if (responseData is List<dynamic>) {
         return responseData;
       } else if (responseData.containsKey('data') && responseData['data'] is List<dynamic>) {
@@ -36,6 +35,40 @@ class AmbulanceServices {
       }
     } else {
       throw Exception('Failed to load alerts');
+    }
+  }
+  Future<void> updateAlertStatus(String alertId, int status) async {
+    print(status);
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? token = prefs.getString('auth_token');
+
+    if (token == null || token.isEmpty) {
+      print('Token not found in SharedPreferences');
+      return;
+    }
+
+    try {
+      final url = Uri.parse('${Constants.apiUrl}/api/crfr/ambulance/update'); // Replace with your API endpoint
+      final response = await http.post(
+        url,
+        headers: {
+          'Authorization': 'Bearer $token',},
+        body: {
+          'alertid': alertId,
+          'status': status.toString(),
+        },
+      );
+
+      if (response.statusCode == 200) {
+        // Successful API call, handle response if needed
+        print('Alert status updated successfully');
+      } else {
+        // Handle error scenario
+        print('Failed to update alert status. Error: ${response.statusCode}');
+      }
+    } catch (e) {
+      // Handle exceptions
+      print('Exception occurred while updating alert status: $e');
     }
   }
 }

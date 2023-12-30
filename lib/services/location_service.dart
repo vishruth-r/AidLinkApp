@@ -5,35 +5,43 @@ import 'package:location/location.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../constants.dart';
-
 class LocationService {
   late Timer _timer;
 
   void startSendingLocation() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? username = prefs.getString('username');
-    String? authToken = prefs.getString('auth_token');
+    print("works till here start sending");
 
-    if (username != null && authToken != null) {
-      _timer = Timer.periodic(Duration(minutes: 60), (timer) {
-        _sendLocation(username, authToken);
-      });
-    } else {
-      print('Username or auth token not found in shared preferences.');
-    }
+    _timer = Timer.periodic(Duration(seconds: 30), (timer) async {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? username = prefs.getString('username');
+      String? authToken = prefs.getString('auth_token');
+      if (username == null || authToken == null) {
+        _timer.cancel();
+        print('Username or authToken is null. Unable to send location.');
+        return;
+      }
+
+      _sendLocation(username!, authToken!, prefs);
+    });
   }
 
-  void _sendLocation(String username, String authToken) async {
+  void _sendLocation(String username, String authToken, SharedPreferences prefs) async {
     LocationData locationData = await determineLocation();
 
     final geocode = "${locationData.latitude},${locationData.longitude}";
     final payload = jsonEncode({
       "geocode": geocode,
       "mobile": username,
+      "location": {
+        "lat": locationData.latitude,
+        "lng": locationData.longitude,
+      },
     });
+    print("PAYLOAD");
+    print(payload);
 
     try {
-      final Uri locationUri = Uri.parse("${Constants.apiUrl}/api/crfr/dummyurl/");
+      final Uri locationUri = Uri.parse("${Constants.apiUrl}/api/crfr/location/");
 
       final response = await http.post(
         locationUri,
@@ -45,15 +53,19 @@ class LocationService {
       );
 
       if (response.statusCode == 200) {
+        print("location sent");
         print('Location sent successfully');
+        final locationString = "${locationData.latitude},${locationData.longitude}";
+        prefs.setString('user_location', locationString);
+
       } else {
+        print('Failed to send location. Status code: ${response.statusCode}');
         print('Failed to send location');
       }
     } catch (e) {
       print('Error sending location: $e');
     }
   }
-
   Future<LocationData> determineLocation() async {
     Location location = Location();
     bool serviceEnabled;
@@ -74,7 +86,6 @@ class LocationService {
         throw 'Location permissions are denied.';
       }
     }
-
     return await location.getLocation();
   }
 

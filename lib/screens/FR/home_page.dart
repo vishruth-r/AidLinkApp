@@ -69,7 +69,7 @@ class _HomePage extends State<HomePage> {
           children: [
             CustomSlideActionBtn(alertText: "Emergency Alert", bgColor: Colors.red),
             SizedBox(height: 20),
-            CustomSlideActionBtn(alertText: "Bleeding Alert", bgColor: Colors.orange),
+            CustomSlideActionBtn(alertText: "Injury Alert", bgColor: Colors.orange),
             SizedBox(height: 20),
             CustomSlideActionBtn(alertText: "Dehydration Alert", bgColor: Colors.blue),
             SizedBox(height: 20),

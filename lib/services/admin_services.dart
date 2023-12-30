@@ -21,6 +21,7 @@
       required bool am,
       required bool ad,
       required bool al,
+      required bool as,
     }) async {
       String mobile = await _getMobileFromPrefs();
       String token = await _getTokenFromPrefs();
@@ -31,8 +32,9 @@
         'AM': am ? 1 : 0,
         'AD': ad ? 1 : 0,
         'AL': al ? 1 : 0,
-      };
+        'AS': as ? 1 : 0,
 
+      };
       final response = await http.post(
         Uri.parse(baseUrl),
         headers: <String, String>{
@@ -73,11 +75,13 @@
       final String assignRoute = '${Constants.apiUrl}/api/crfr/doctor/assign';
       final String? token = await _getTokenFromPrefs();
 
-      // Data to be sent in the request body
+
       Map<String, String> requestBody = {
         'alertid': alertID,
         'ambulanceid': ambulanceID,
       };
+      print("requestBody $requestBody");
+
 
       // Encode the request body to JSON
       String jsonBody = json.encode(requestBody);
@@ -92,6 +96,7 @@
           },
           body: jsonBody,
         );
+        print("token $token");
 
         // Check the response status
         if (response.statusCode == 200) {
@@ -107,6 +112,46 @@
       } catch (e) {
         // Handle errors
         print('Error assigning ambulance to alert: $e');
+      }
+    }
+    Future<void> updateAlert(String alertId, int status) async {
+      print("hello world");
+      String? authToken = await _getTokenFromPrefs();
+      String? mobiile = await _getMobileFromPrefs();
+
+      if (authToken != null) {
+        Map<String, dynamic> requestBody = {
+          "mobile": mobiile, // Replace with the actual value
+          "alertid": alertId,
+          "status": status
+        };
+
+        String apiUrl = '${Constants.apiUrl}/api/crfr/doctor/alert/update'; // Replace with your actual API endpoint
+
+        try {
+          final response = await http.post(
+            Uri.parse(apiUrl),
+            headers: {
+              'Authorization': 'Bearer $authToken',
+              'Content-Type': 'application/json',
+            },
+            body: jsonEncode(requestBody),
+          );
+
+          if (response.statusCode == 200) {
+            // Alert updated successfully
+            print('Alert updated successfully');
+          } else {
+            // Handle other status codes or errors
+            print('Failed to update alert. Status code: ${response.statusCode}');
+          }
+        } catch (e) {
+          // Handle any exceptions or errors during the API call
+          print('Exception while updating alert: $e');
+        }
+      } else {
+        // Handle case where auth token is not available
+        print('JWT token not found');
       }
     }
   }

@@ -45,6 +45,10 @@ dependencies:
   slider_button: ^2.0.0
   intl: ^0.18.1
   google_maps_flutter: ^2.3.0
+  flutter_local_notifications: ^16.3.0
+  audio_service: ^0.18.12
+  vibration: ^1.8.4
+  shimmer: ^2.0.0
 
 dev_dependencies:
   flutter_test:
@@ -77,6 +81,14 @@ flutter:
     - assets/images/al2-icon.png
     - assets/images/al3-icon.png
     - assets/images/al4-icon.png
+    - assets/images/cr-logo.png
+    - assets/images/resq-logo.png
+    - assets/images/am-busy-icon.png
+    - assets/images/am-offline-icon.png
+    - assets/images/fr-offline-icon.png
+    - assets/images/was-icon.png
+    - assets/images/ma-icon.png
+    - assets/images/as-icon.png
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware
 
