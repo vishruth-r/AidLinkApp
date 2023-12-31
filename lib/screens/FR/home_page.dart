@@ -4,65 +4,127 @@ import 'package:aidlink/services/FR_services.dart';
 import 'package:aidlink/services/login_services.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+import '../maps_page.dart';
 class HomePage extends StatefulWidget {
   @override
-  _HomePage createState() => _HomePage();
+  _HomePageState createState() => _HomePageState();
 }
 
-class _HomePage extends State<HomePage> {
+class _HomePageState extends State<HomePage> {
+  String? dutyLocation;
+  String? typeDescription;
+  String? name;
+  String? reportingTo;
+
+  @override
+  void initState() {
+    super.initState();
+    getUserData();
+  }
+
+  void getUserData() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      dutyLocation = prefs.getString('duty_location');
+      typeDescription = prefs.getString('type_description');
+      name = prefs.getString('name');
+      reportingTo = prefs.getString('reporting_to');
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-
-        title: Text('Your Page'),
+        title: Text('Raise Alert'),
         actions: [
           IconButton(
             icon: Icon(Icons.list),
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => ViewAlertsFR(),
+                MaterialPageRoute(builder: (context) => ViewAlertsFR()),
+              );
+            },
+          ),
+          IconButton(
+            icon: Icon(Icons.location_pin),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => MapsPage()),
+              );
+            },
+          )
+        ],
+      ),drawer: Drawer(
+      child: Column(
+        children: [
+          Expanded(
+            child: ListView(
+              padding: EdgeInsets.zero,
+              children: [
+                DrawerHeader(
+                  decoration: BoxDecoration(
+                    color: Colors.blue,
+                  ),
+                  child: UserAccountsDrawerHeader(
+                    accountName: Text(
+                      name ?? '', // Replace with the user's name from SharedPreferences
+                      style: TextStyle(
+                        fontSize: 24,
+                        color: Colors.white,
+                      ),
+                    ),
+                    accountEmail: Text(
+                      typeDescription ?? '', // Replace with the user's username from SharedPreferences
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.white,
+                      ),
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.blue,
+                    ),
+                  ),
                 ),
+                ListTile(
+                  leading: Icon(Icons.call),
+                  title: Text('Helpdesk'),
+                  onTap: () {
+                    _makePhoneCall(reportingTo ?? '');
+                  },
+                ),
+                ListTile(
+                  leading: Icon(Icons.directions),
+                  title: Text('Assigned Location'),
+                  onTap: () {
+                    _launchMaps(dutyLocation ?? '');
+                  },
+                ),
+              ],
+            ),
+          ),
+          Divider(
+            color: Colors.grey,
+          ),
+          ListTile(
+            leading: Icon(Icons.power_settings_new),
+            title: Text('Logout'),
+            onTap: () {
+              LoginService().logoutUser();
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (context) => LoginPage()),
+                    (route) => false,
               );
             },
           ),
         ],
       ),
-      drawerEnableOpenDragGesture: false, // Disable opening drawer by sliding
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            DrawerHeader(
-              decoration: BoxDecoration(
-                color: Colors.blue,
-              ),
-              child: Text(
-                'Drawer Header',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                ),
-              ),
-            ),
-            ListTile(
-              title: Text('Logout'),
-              onTap: () {
-                LoginService().logoutUser();
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(builder: (context) => LoginPage()),
-                      (route) => false,
-                );
-
-              },
-            ),
-          ],
-        ),
-      ),
+    ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -79,8 +141,18 @@ class _HomePage extends State<HomePage> {
       ),
     );
   }
-}
 
+
+  void _makePhoneCall(String phoneNumber) {
+    // Implement your phone call functionality here
+    print("Making a phone call to $phoneNumber");
+  }
+
+  void _launchMaps(String location) {
+    // Implement launching maps functionality here
+    print("Launching maps for location: $location");
+  }
+}
 class CustomSlideActionBtn extends StatefulWidget {
   final String alertText;
   final Color bgColor;
@@ -182,7 +254,7 @@ class _CustomSlideActionBtnState extends State<CustomSlideActionBtn> {
     switch (alertText) {
       case "Emergency Alert":
         return 1;
-      case "Bleeding Alert":
+      case "Injury Alert":
         return 2;
       case "Dehydration Alert":
         return 3;

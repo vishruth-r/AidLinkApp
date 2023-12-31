@@ -79,7 +79,7 @@ class FRServices {
       );
 
       if (response.statusCode == 200) {
-        final List<dynamic> alerts = json.decode(response.body)['data'];
+          final List<dynamic> alerts = json.decode(response.body)['data'];
         List<Map<String, dynamic>> formattedAlerts = [];
 
         for (var alert in alerts) {
@@ -90,16 +90,15 @@ class FRServices {
             'id': alert['_id'],
             'title': alert['title'],
             'statusDescription': alert['statusdescription'],
+            'statusColor': alert['statuscolor'],
             'at': formattedDate,
             'type': alertType,
-            'status' : alert['status'],
             'name'  : alert['by']['name'],
             'mobile' : alert['by']['mobile'],
             'location' : alert['from'],
-            'ambulance' : alert['ambulance'] ?? 'Not assigned',
+            'ambulance' : alert['ambulance'],
             'statusdescription' : alert['statusdescription'],
-            'docstatus' : alert['docstatus']['status'],
-            'docstatusdescription' : alert['docstatus']['description'],
+            'docstatus': alert['docstatus'],
           });
         }
 

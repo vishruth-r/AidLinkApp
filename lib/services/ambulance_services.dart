@@ -37,6 +37,7 @@ class AmbulanceServices {
       throw Exception('Failed to load alerts');
     }
   }
+
   Future<void> updateAlertStatus(String alertId, int status) async {
     print(status);
     SharedPreferences prefs = await SharedPreferences.getInstance();

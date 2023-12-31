@@ -10,6 +10,7 @@
     <uses-permission android:name="android.permission.VIBRATE"/>
 
 
+
     <queries>
         <intent>
             <action android:name="android.intent.action.VIEW" />
@@ -26,7 +27,7 @@
     </queries>
    <application
 
-        android:label="aidlink"
+        android:label="ResQ"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
        
@@ -62,6 +63,6 @@
        <meta-data
            android:name="com.google.firebase.messaging.default_notification_channel_id"
            android:value="@string/default_notification_channel_id" />
+          </application>
 
-   </application>
 </manifest>

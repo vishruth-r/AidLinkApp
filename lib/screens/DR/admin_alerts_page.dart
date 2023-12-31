@@ -1,10 +1,13 @@
 import 'package:aidlink/screens/maps_page.dart';
 import 'package:aidlink/services/admin_services.dart';
 import 'package:aidlink/services/login_services.dart';
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:vibration/vibration.dart';
 import '../../services/FR_services.dart';
+import '../../services/fcm_services.dart';
 import '../login_page.dart';
 
 class AdminAlertsPage extends StatefulWidget {
@@ -13,6 +16,13 @@ class AdminAlertsPage extends StatefulWidget {
 }
 
 class _AdminAlertsPageState extends State<AdminAlertsPage> {
+  bool _isDisposed = false;
+  late TabController _tabController;
+  FirebaseMessagingService _messagingService = FirebaseMessagingService();
+  late final AudioPlayer _audioPlayer = AudioPlayer();
+  bool _isAudioPlaying = false;
+
+
   String? dutyLocation;
   String? typeDescription;
   String? name;
@@ -26,12 +36,75 @@ class _AdminAlertsPageState extends State<AdminAlertsPage> {
   List<Map<String, dynamic>> dehydrationAlerts = [];
   List<Map<String, dynamic>> socialThreatAlerts = [];
 
-
   @override
   void initState() {
     super.initState();
+    _messagingService.onMessageReceived.listen((Map<String, dynamic> message) {
+      print('New alert received: $message');
+      _fetchAlerts();
+      _showSnackbarWithButton(message['event']['type']); // Pass type from FCM message
+      _ringAndVibrate();
+    });
     _fetchAlerts();
     getUserData();
+  }
+
+  @override
+  void dispose() {
+    _isDisposed = true;
+    // Dispose resources, listeners, etc.
+    super.dispose();
+  }
+
+  void _showSnackbarWithButton(int type) {
+    print("works snackbar");
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Expanded(
+              child: Text('New Alert Raised!'),
+            ),
+          ],
+        ),
+        duration: Duration(days: 1), // Change the duration as needed
+        action: SnackBarAction(
+          label: 'View',
+          onPressed: () {
+            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+            _stopAudio();
+            _stopVibration();
+            _switchToTab(type);
+            },
+        ),
+      ),
+    );
+  }
+
+
+  void _ringAndVibrate() async {
+      await _audioPlayer.play(AssetSource('emergency-alarm.mp3'));
+        _isAudioPlaying = true;
+        await Vibration.vibrate(duration: 10000000, amplitude: 128, intensities: [128]);
+      }
+
+
+  void _stopAudio() async {
+    if (_isAudioPlaying) {
+      await _audioPlayer.stop();
+      _isAudioPlaying = false;
+    }
+  }
+
+  void _stopVibration() {
+    Vibration.cancel();
+  }
+
+
+  void _switchToTab(int type) {
+    if (type >= 1 && type <= 4) {
+      _tabController.animateTo(type - 1); // Switch to the corresponding tab (0-based index)
+    }
   }
 
   void getUserData() async {
@@ -47,26 +120,24 @@ class _AdminAlertsPageState extends State<AdminAlertsPage> {
 
   Future<void> _fetchAlerts() async {
     try {
-      List<Map<String, dynamic>>? fetchedAlerts = await _frServices
-          .getFRAlerts();
-      if (fetchedAlerts != null) {
+      List<Map<String, dynamic>>? fetchedAlerts = await _frServices.getFRAlerts();
+      if (!_isDisposed) {
         setState(() {
-          // Filter alerts according to their types
-          emergencyAlerts =
-              fetchedAlerts.where((alert) => alert['type'] == 1).toList();
-          bleedingAlerts =
-              fetchedAlerts.where((alert) => alert['type'] == 2).toList();
-          dehydrationAlerts =
-              fetchedAlerts.where((alert) => alert['type'] == 3).toList();
-          socialThreatAlerts =
-              fetchedAlerts.where((alert) => alert['type'] == 4).toList();
+          if (fetchedAlerts != null) {
+            // Filter alerts according to their types
+            emergencyAlerts = fetchedAlerts.where((alert) => alert['type'] == 1).toList();
+            bleedingAlerts = fetchedAlerts.where((alert) => alert['type'] == 2).toList();
+            dehydrationAlerts = fetchedAlerts.where((alert) => alert['type'] == 3).toList();
+            socialThreatAlerts = fetchedAlerts.where((alert) => alert['type'] == 4).toList();
+          }
         });
       }
     } catch (e) {
-      print('Exception while fetching alerts: $e');
+      if (!_isDisposed) {
+        print('Exception while fetching alerts: $e');
+      }
     }
   }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -189,7 +260,6 @@ class _AdminAlertsPageState extends State<AdminAlertsPage> {
       ),
     );
   }
-
   @override
   Widget _buildAlertsList(List<Map<String, dynamic>> alerts) {
     if (alerts.isEmpty) {
@@ -197,11 +267,27 @@ class _AdminAlertsPageState extends State<AdminAlertsPage> {
         child: Text('No alerts found'),
       );
     }
+    Color getStatusColor(String statusColorHex) {
+      if (statusColorHex != null && statusColorHex.isNotEmpty) {
+        try {
+          int colorValue = int.parse(statusColorHex.substring(2), radix: 16);
+          return Color(colorValue);
+        } catch (e) {
+          print('Error parsing color: $e');
+        }
+      }
+      return Colors.blue; // Default color if parsing fails
+    }
     return ListView.builder(
       itemCount: alerts.length,
       itemBuilder: (context, index) {
         final alert = alerts[index];
         bool isAmbulanceAssigned = alert['ambulance'] is Map<String, dynamic>;
+        bool isClickable = alert['docstatus'] != Map<String, dynamic>;
+
+        final status = alert['statusdescription'];
+        final statusColorHex = alert['statusColor'];
+        Color statusBackgroundColor = getStatusColor(statusColorHex);
 
         return Card(
           margin: EdgeInsets.all(8.0),
@@ -215,16 +301,16 @@ class _AdminAlertsPageState extends State<AdminAlertsPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text('${alert['at']}'),
-                    Text('${alert['statusDescription']}'),
                     Text('${alert['name']}'),
                     if (isAmbulanceAssigned)
-                      Text(' ${alert['ambulance']['name']}'),
+                      Text('${alert['ambulance']['name']}'),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         IconButton(
                           onPressed: () {
-                            String latLong = '${alert['location'][1]},${alert['location'][0]}';
+                            String latLong =
+                                '${alert['location'][1]},${alert['location'][0]}';
                             _launchMaps(latLong);
                           },
                           icon: Transform.rotate(
@@ -232,7 +318,6 @@ class _AdminAlertsPageState extends State<AdminAlertsPage> {
                             child: Icon(Icons.navigation, color: Colors.blue),
                           ),
                         ),
-
                         IconButton(
                           icon: Icon(Icons.phone, color: Colors.green),
                           onPressed: () {
@@ -253,8 +338,9 @@ class _AdminAlertsPageState extends State<AdminAlertsPage> {
                   ],
                 ),
                 onTap: isAmbulanceAssigned ? null : () async {
-                  if (!isAmbulanceAssigned) {
-                    List<Map<String, dynamic>>? ambulanceDetails = await _mapService.getUsersList(
+                  if (!isAmbulanceAssigned && isClickable) {
+                    List<Map<String, dynamic>>? ambulanceDetails =
+                    await _mapService.getUsersList(
                       fr: false,
                       am: true,
                       ad: false,
@@ -266,16 +352,33 @@ class _AdminAlertsPageState extends State<AdminAlertsPage> {
                       builder: (BuildContext context) {
                         return _buildAmbulanceDetails(
                           ambulanceDetails,
+                          alert['docstatus'],
                           alert['title'],
                           alert['id'],
                           alert['statusdescription'],
-                          alert['status'],
-                          alert['docstatusdescription'],
                         );
                       },
                     );
                   }
                 },
+              ),
+              Positioned(
+                top: 10,
+                right: 10,
+                child: Container(
+                  padding: EdgeInsets.all(8.0),
+                  decoration: BoxDecoration(
+                    color: statusBackgroundColor, // Use status color as background
+                    borderRadius: BorderRadius.all(Radius.circular(20.0)
+                    ),
+                  ),
+                  child: Text(
+                    '$status',
+                    style: TextStyle(
+                      color: Colors.white, // Text color for status label
+                    ),
+                  ),
+                ),
               ),
             ],
           ),
@@ -305,11 +408,10 @@ class _AdminAlertsPageState extends State<AdminAlertsPage> {
   }
   Widget _buildAmbulanceDetails(
       List<Map<String, dynamic>>? ambulanceDetails,
+      Map<String, dynamic>? docstatus,
       String alertTitle,
       String alertID,
       String alertStatus,
-      int docstatus,
-      String docstatusDescription,
 
       ) {
     return Container(
@@ -338,10 +440,12 @@ class _AdminAlertsPageState extends State<AdminAlertsPage> {
               ),
               ElevatedButton(
                 onPressed: () {
-                  // Open a Popup to perform an action
-                  _showActionPopup(docstatus, docstatusDescription);
+                  int docstatusNo = docstatus!['status'];
+                  String docstatusDescription = docstatus!['description'];
+
+                  _showActionPopup(docstatusNo, docstatusDescription, alertID);
                 },
-                child: Text('Action'),
+                child: Text('Update Status'),
               ),
             ],
           ),
@@ -372,10 +476,10 @@ class _AdminAlertsPageState extends State<AdminAlertsPage> {
                     ],
                   ),
                   trailing: ElevatedButton(
-                    onPressed: () {
+                    onPressed: () async {
                       if (ambulance != null && alertID != null) {
-                        String ambulanceID = ambulance['id'] ?? '';
-                        _mapService.assignAmbulanceToAlert(
+                         String ambulanceID = ambulance['id'] ?? '';
+                         await _mapService.assignAmbulanceToAlert(
                           alertID,
                           ambulanceID,
                         );
@@ -393,8 +497,7 @@ class _AdminAlertsPageState extends State<AdminAlertsPage> {
     );
   }
 
-  void _showActionPopup(int docStatus, String docStatusDescription) {
-    // Example:
+  void _showActionPopup(int docStatus, String docStatusDescription, String alertId){
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -410,8 +513,9 @@ class _AdminAlertsPageState extends State<AdminAlertsPage> {
               ),
 
               ElevatedButton(
-                onPressed: () {
-                  _handleDocStatusAction();
+                onPressed: () async {
+                  await _mapService.updateAlertStatus(alertId, docStatus);
+                  _fetchAlerts();
                   Navigator.of(context).pop(); // Close the dialog
                 },
                 child: Text('Yes'),
@@ -423,7 +527,4 @@ class _AdminAlertsPageState extends State<AdminAlertsPage> {
       },
     );
   }
-}
-
-void _handleDocStatusAction() {
 }

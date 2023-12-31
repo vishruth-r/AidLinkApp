@@ -1,5 +1,7 @@
+import 'package:aidlink/screens/FR/home_page.dart';
 import 'package:flutter/material.dart';
 import '../../services/FR_services.dart';
+import '../maps_page.dart';
 
 class ViewAlertsFR extends StatefulWidget {
   @override
@@ -23,10 +25,14 @@ class _ViewAlertsFRState extends State<ViewAlertsFR> {
     List<Map<String, dynamic>>? fetchedAlerts = await _frServices.getFRAlerts();
     if (fetchedAlerts != null) {
       setState(() {
-        emergencyAlerts = fetchedAlerts.where((alert) => alert['type'] == 1).toList();
-        bleedingAlerts = fetchedAlerts.where((alert) => alert['type'] == 2).toList();
-        dehydrationAlerts = fetchedAlerts.where((alert) => alert['type'] == 3).toList();
-        socialThreatAlerts = fetchedAlerts.where((alert) => alert['type'] == 4).toList();
+        emergencyAlerts =
+            fetchedAlerts.where((alert) => alert['type'] == 1).toList();
+        bleedingAlerts =
+            fetchedAlerts.where((alert) => alert['type'] == 2).toList();
+        dehydrationAlerts =
+            fetchedAlerts.where((alert) => alert['type'] == 3).toList();
+        socialThreatAlerts =
+            fetchedAlerts.where((alert) => alert['type'] == 4).toList();
       });
     }
   }
@@ -35,7 +41,27 @@ class _ViewAlertsFRState extends State<ViewAlertsFR> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('View Alerts'),
+        title: Text('My Alerts'),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.warning),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => HomePage()),
+              );
+            },
+          ),
+          IconButton(
+            icon: Icon(Icons.location_pin),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => MapsPage()),
+              );
+            },
+          )
+        ],
       ),
       body:
       DefaultTabController(
@@ -48,10 +74,14 @@ class _ViewAlertsFRState extends State<ViewAlertsFR> {
               indicatorColor: Colors.blue,
               indicatorWeight: 2.0,
               tabs: [
-                Tab(text: 'Emergency', icon: Icon(Icons.warning, color: Colors.red)),
-                Tab(text: 'Bleeding', icon: Icon(Icons.local_hospital, color: Colors.orange)),
-                Tab(text: 'Dehydration', icon: Icon(Icons.water_damage, color: Colors.blue)),
-                Tab(text: 'Social Threat', icon: Icon(Icons.group, color: Colors.green)),
+                Tab(text: 'Emergency',
+                    icon: Icon(Icons.warning, color: Colors.red)),
+                Tab(text: 'Injury',
+                    icon: Icon(Icons.local_hospital, color: Colors.orange)),
+                Tab(text: 'Dehydration',
+                    icon: Icon(Icons.water_drop_outlined, color: Colors.blue)),
+                Tab(text: 'Social Threat',
+                    icon: Icon(Icons.group, color: Colors.green)),
               ],
             ),
             Expanded(
@@ -70,17 +100,40 @@ class _ViewAlertsFRState extends State<ViewAlertsFR> {
       ),
     );
   }
-
   Widget _buildAlertsList(List<Map<String, dynamic>> alerts) {
-    return ListView.builder(
+    return alerts.isEmpty
+        ? Center(
+      child: Text(
+        'No Alerts',
+        style: TextStyle(fontSize: 24.0),
+      ),
+    )
+        : ListView.builder(
       itemCount: alerts.length,
       itemBuilder: (context, index) {
         final alert = alerts[index];
         return Card(
           margin: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
           child: ListTile(
-            title: Text('ID: ${alert['id']}'),
-            subtitle: Text('At: ${alert['at']}\nStatus: ${alert['status']}'),
+            title: Text(
+              '${alert['title']}',
+              style: TextStyle(fontSize: 20),
+            ),
+            subtitle: Text(
+              '${alert['at']}',
+              style: TextStyle(fontSize: 16),
+            ),
+            trailing: Container(
+              padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+              decoration: BoxDecoration(
+                color: Color(int.parse(alert['statusColor'])),
+                borderRadius: BorderRadius.all(Radius.circular(20.0)),
+              ),
+              child: Text(
+                '${alert['statusdescription']}',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
           ),
         );
       },

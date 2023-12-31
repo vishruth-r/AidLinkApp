@@ -114,44 +114,36 @@
         print('Error assigning ambulance to alert: $e');
       }
     }
-    Future<void> updateAlert(String alertId, int status) async {
-      print("hello world");
-      String? authToken = await _getTokenFromPrefs();
-      String? mobiile = await _getMobileFromPrefs();
+    Future<void> updateAlertStatus(String alertId, int status) async {
+      print("alertid123 $status");
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? token = prefs.getString('auth_token');
 
-      if (authToken != null) {
-        Map<String, dynamic> requestBody = {
-          "mobile": mobiile, // Replace with the actual value
-          "alertid": alertId,
-          "status": status
-        };
+      if (token == null || token.isEmpty) {
+        print('Token not found in SharedPreferences');
+        return;
+      }
 
-        String apiUrl = '${Constants.apiUrl}/api/crfr/doctor/alert/update'; // Replace with your actual API endpoint
+      try {
+        final url = Uri.parse('${Constants.apiUrl}/api/crfr/doctor/alert/update/'); // Replace with your API endpoint
+        final response = await http.post(
+          url,
+          headers: {
+            'Authorization': 'Bearer $token',},
+          body: {
+            'alertid': alertId,
+            'status': (status+1).toString(),
+          },
+        );
 
-        try {
-          final response = await http.post(
-            Uri.parse(apiUrl),
-            headers: {
-              'Authorization': 'Bearer $authToken',
-              'Content-Type': 'application/json',
-            },
-            body: jsonEncode(requestBody),
-          );
-
-          if (response.statusCode == 200) {
-            // Alert updated successfully
-            print('Alert updated successfully');
-          } else {
-            // Handle other status codes or errors
-            print('Failed to update alert. Status code: ${response.statusCode}');
-          }
-        } catch (e) {
-          // Handle any exceptions or errors during the API call
-          print('Exception while updating alert: $e');
+        if (response.statusCode == 200) {
+          print('Alert status updated successfully');
+        } else {
+          // Handle error scenario
+          print('Failed to update alert status. Error: ${response.statusCode}');
         }
-      } else {
-        // Handle case where auth token is not available
-        print('JWT token not found');
+      } catch (e) {
+        print('Exception occurred while updating alert status: $e');
       }
     }
   }

@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../services/ambulance_services.dart';
+import '../../services/fcm_services.dart';
 import '../../services/login_services.dart';
 import '../login_page.dart';
 import '../maps_page.dart';
@@ -12,7 +13,9 @@ class AmbulancePage extends StatefulWidget {
   _AmbulancePageState createState() => _AmbulancePageState();
 }
 
+
 class _AmbulancePageState extends State<AmbulancePage> {
+  FirebaseMessagingService _messagingService = FirebaseMessagingService();
   String? dutyLocation;
   String? typeDescription;
   String? name;
@@ -24,10 +27,12 @@ class _AmbulancePageState extends State<AmbulancePage> {
   @override
   void initState() {
     super.initState();
+    _messagingService.onMessageReceived.listen((Map<String, dynamic> message) {
+      fetchAlerts();
+    });
     fetchAlerts();
     getUserData();
   }
-
   void getUserData() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
@@ -202,9 +207,6 @@ class _AmbulancePageState extends State<AmbulancePage> {
               ),
               onTap: () {
                 _showAlertPopup(alert['nextstatus']['status'], alert['nextstatus']['description'], alert['_id']);
-
-                // Handle tapping on the alert (if needed)
-                // You can navigate to a detailed alert page or perform any other action
               },
             ),
           );
