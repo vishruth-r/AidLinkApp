@@ -14,7 +14,7 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
 
-  // Initialize Awesome Notifications
+
   AwesomeNotifications().initialize(
     'resource://drawable/app_icon',
     [

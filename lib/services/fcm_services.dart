@@ -88,6 +88,7 @@ void handleData(Map<String, dynamic> messageData) {
   }
 
   Stream<Map<String, dynamic>> get onMessageReceived {
-    return FirebaseMessaging.onMessage.map((RemoteMessage message) => message.data);
+    return 0 as Stream<Map<String, dynamic>>;
+   // return FirebaseMessaging.onMessage.map((RemoteMessage message) => message.data);
   }
 }

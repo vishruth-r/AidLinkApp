@@ -95,8 +95,7 @@ flutter:
     - assets/images/was-icon.png
     - assets/images/ma-icon.png
     - assets/images/as-icon.png
-    - assets/emergency-alarm.mp3
-    - assets/images/resq-launcher-icon.png
+    - assets/audios/emergency-alarm.mp3
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware
