@@ -66,21 +66,29 @@ class LocationService {
       print('Error sending location: $e');
     }
   }
+
   Future<LocationData> determineLocation() async {
+    print("calling fn");
     Location location = Location();
     bool serviceEnabled;
     PermissionStatus permission;
 
     serviceEnabled = await location.serviceEnabled();
+    print("got the response");
+    print(serviceEnabled);
     if (!serviceEnabled) {
+      print("requesting service");
       serviceEnabled = await location.requestService();
       if (!serviceEnabled) {
+        print("services disabled");
         throw 'Location services are disabled.';
       }
     }
 
     permission = await location.hasPermission();
+    print(permission);
     if (permission == PermissionStatus.denied) {
+      print("denied");
       permission = await location.requestPermission();
       if (permission != PermissionStatus.granted) {
         throw 'Location permissions are denied.';

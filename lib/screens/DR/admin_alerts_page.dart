@@ -399,7 +399,7 @@ class _AdminAlertsPageState extends State<AdminAlertsPage> {
 
   void _makePhoneCall(String phoneNumber) async {
     print("Phone number: $phoneNumber");
-    String phoneUrl = 'tel:$phoneNumber';
+    String phoneUrl = 'tel: +91$phoneNumber';
     if (await canLaunch(phoneUrl)) {
       await launch(phoneUrl);
     } else {

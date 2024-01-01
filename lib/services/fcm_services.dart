@@ -88,7 +88,12 @@ void handleData(Map<String, dynamic> messageData) {
   }
 
   Stream<Map<String, dynamic>> get onMessageReceived {
-    return 0 as Stream<Map<String, dynamic>>;
-   // return FirebaseMessaging.onMessage.map((RemoteMessage message) => message.data);
+    // Simulate an asynchronous operation by creating a Stream with a single value
+    final fakeData = {'result': 0}; // Replace this with your desired data
+
+    // Return a Stream using Stream.fromIterable
+    return Stream.fromIterable([fakeData]);
+    // Uncomment the line below when you want to use FirebaseMessaging.onMessage
+    // return FirebaseMessaging.onMessage.map((RemoteMessage message) => message.data);
   }
 }

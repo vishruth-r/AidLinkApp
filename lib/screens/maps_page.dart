@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:typed_data';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -80,14 +79,13 @@ class _MapsPageState extends State<MapsPage> {
 
     if (storedLocation != null) {
       List<String> latLng = storedLocation.split(',');
-      double latitude = double.tryParse(latLng[0]) ?? 0.0;
-      double longitude = double.tryParse(latLng[1]) ?? 0.0;
+      double latitude = double.tryParse(latLng[0]) ?? 13.0377;
+      double longitude = double.tryParse(latLng[1]) ?? 80.27;
 
       setState(() {
         _currentLocation = LatLng(latitude, longitude);
       });
     } else {
-      // If no stored location found, get the current location
       _getCurrentLocation();
     }
   }
@@ -103,18 +101,18 @@ class _MapsPageState extends State<MapsPage> {
     });
   }
   void _getCurrentLocation() async {
-    try {
-      // Request permission to access the device's location
-      await location.requestPermission();
-
-      // Get the current location of the user
-      LocationData currentLocation = await location.getLocation();
-      setState(() {
-        _currentLocation = LatLng(currentLocation.latitude!, currentLocation.longitude!);
-      });
-    } catch (e) {
-      print('Error getting current location: $e');
-    }
+    // try {
+    //   // Request permission to access the device's location
+    //   await location.requestPermission();
+    //
+    //   // Get the current location of the user
+    //   LocationData currentLocation = await location.getLocation();
+    //   setState(() {
+    //     _currentLocation = LatLng(currentLocation.latitude!, currentLocation.longitude!);
+    //   });
+    // } catch (e) {
+    //   print('Error getting current location: $e');
+    // }
   }
 
   void _setMarkerIcons() async {

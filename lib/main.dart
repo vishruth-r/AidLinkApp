@@ -9,11 +9,9 @@ import 'package:aidlink/screens/login_page.dart';
 import 'package:aidlink/services/fcm_services.dart';
 import 'package:aidlink/services/location_service.dart';
 import 'package:aidlink/screens/DR/admin_alerts_page.dart';
-
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
-
+  //await Firebase.initializeApp();
 
   AwesomeNotifications().initialize(
     'resource://drawable/app_icon',
@@ -26,9 +24,8 @@ Future<void> main() async {
     ],
   );
 
-  FirebaseMessagingService messagingService = FirebaseMessagingService();
-  await messagingService.configureFirebaseMessaging();
-  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+  //FirebaseMessagingService messagingService = FirebaseMessagingService();
+  //await messagingService.configureFirebaseMessaging();
 
   runApp(MyApp());
 }
