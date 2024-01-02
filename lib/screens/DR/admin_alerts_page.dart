@@ -1,7 +1,6 @@
 import 'package:aidlink/screens/maps_page.dart';
 import 'package:aidlink/services/admin_services.dart';
 import 'package:aidlink/services/login_services.dart';
-import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -9,6 +8,8 @@ import 'package:vibration/vibration.dart';
 import '../../services/FR_services.dart';
 import '../../services/fcm_services.dart';
 import '../login_page.dart';
+import 'package:just_audio/just_audio.dart';
+
 
 class AdminAlertsPage extends StatefulWidget {
   @override
@@ -19,7 +20,7 @@ class _AdminAlertsPageState extends State<AdminAlertsPage> {
   bool _isDisposed = false;
   late TabController _tabController;
   FirebaseMessagingService _messagingService = FirebaseMessagingService();
-  late final AudioPlayer _audioPlayer = AudioPlayer();
+  late AudioPlayer _audioPlayer;
   bool _isAudioPlaying = false;
 
 
@@ -39,11 +40,11 @@ class _AdminAlertsPageState extends State<AdminAlertsPage> {
   @override
   void initState() {
     super.initState();
+    _audioPlayer = AudioPlayer();
     _messagingService.onMessageReceived.listen((Map<String, dynamic> message) {
       print('New alert received: $message');
       _fetchAlerts();
-      _showSnackbarWithButton(message['event']['type']); // Pass type from FCM message
-      _ringAndVibrate();
+      _showSnackbarWithButton(); // Pass type from FCM message
     });
     _fetchAlerts();
     getUserData();
@@ -51,12 +52,11 @@ class _AdminAlertsPageState extends State<AdminAlertsPage> {
 
   @override
   void dispose() {
+    _audioPlayer.dispose();
     _isDisposed = true;
-    // Dispose resources, listeners, etc.
     super.dispose();
   }
-
-  void _showSnackbarWithButton(int type) {
+  void _showSnackbarWithButton() async {
     print("works snackbar");
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -72,40 +72,38 @@ class _AdminAlertsPageState extends State<AdminAlertsPage> {
           label: 'View',
           onPressed: () {
             ScaffoldMessenger.of(context).hideCurrentSnackBar();
-            _stopAudio();
             _stopVibration();
-            _switchToTab(type);
-            },
+            _stopNotificationSound();
+          },
         ),
       ),
     );
+
+    await _playNotificationSound();
   }
-
-
-  void _ringAndVibrate() async {
-      await _audioPlayer.play(AssetSource('emergency-alarm.mp3'));
+  Future<void> _playNotificationSound() async {
+    try {
+      await _audioPlayer.setAsset('assets/audios/emergency-alarm.mp3');
+      await _audioPlayer.play();
+      setState(() {
         _isAudioPlaying = true;
-        await Vibration.vibrate(duration: 10000000, amplitude: 128, intensities: [128]);
-      }
-
-
-  void _stopAudio() async {
-    if (_isAudioPlaying) {
-      await _audioPlayer.stop();
-      _isAudioPlaying = false;
+      });
+    } catch (e) {
+      print('Error playing audio: $e');
     }
   }
+  Future<void> _stopNotificationSound() async {
+    await _audioPlayer.stop();
+    setState(() {
+      _isAudioPlaying = false;
+    });
+  }
+
 
   void _stopVibration() {
     Vibration.cancel();
   }
 
-
-  void _switchToTab(int type) {
-    if (type >= 1 && type <= 4) {
-      _tabController.animateTo(type - 1); // Switch to the corresponding tab (0-based index)
-    }
-  }
 
   void getUserData() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();

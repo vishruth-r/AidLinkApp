@@ -12,22 +12,22 @@ class LoginService {
     try {
       final Uri loginUri = Uri.parse("${Constants.apiUrl}/api/crfr/users/signin/");
 
-      //String? fcmToken = await FirebaseMessaging.instance.getToken();
-      //print('FCM Token: $fcmToken');
+      String? fcmToken = await FirebaseMessaging.instance.getToken();
+      print('FCM Token: $fcmToken');
 
-     // LocationData? location = await LocationService().determineLocation();
-      //print(location.latitude);
-      //print(location.longitude);
+     LocationData? location = await LocationService().determineLocation();
+      print(location.latitude);
+      print(location.longitude);
       if (username != null) { // change to fcm token and location not null
         final response = await http.post(
           loginUri,
           body: jsonEncode({
             'username': username,
             'password': password,
-            'devicetoken': 'fcmToken',
+            'devicetoken': fcmToken,
             'location': {
-              'lat': '13.34',
-              'lng': '80.87',
+              'lat': location.latitude,
+              'lng': location.longitude,
             },
           }),
           headers: {'Content-Type': 'application/json'},
@@ -61,6 +61,7 @@ class LoginService {
         return null;
       }
     } catch (e) {
+
       print('Error during login: $e');
       return null;
     }

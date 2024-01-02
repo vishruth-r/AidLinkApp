@@ -1,11 +1,15 @@
 import 'dart:async';
 import 'dart:ui';
+import 'package:aidlink/screens/DR/admin_alerts_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:just_audio/just_audio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:vibration/vibration.dart';
 import '../services/admin_services.dart';
+import '../services/fcm_services.dart';
 import '../services/login_services.dart';
 import 'login_page.dart';
 import 'package:location/location.dart';
@@ -16,6 +20,12 @@ class MapsPage extends StatefulWidget {
 }
 
 class _MapsPageState extends State<MapsPage> {
+  bool _isDisposed = false;
+  late TabController _tabController;
+  FirebaseMessagingService _messagingService = FirebaseMessagingService();
+  late AudioPlayer _audioPlayer;
+  bool _isAudioPlaying = false;
+
   Timer? _timer;
   Location location = Location(); // Location object for getting current location
   LatLng _currentLocation = LatLng(0, 0); // Initialize with a default location
@@ -50,12 +60,75 @@ class _MapsPageState extends State<MapsPage> {
 
   @override
   void initState() {
+
+    _audioPlayer = AudioPlayer();
+    _messagingService.onMessageReceived.listen((Map<String, dynamic> message) {
+      print('New alert received: $message');
+      _showSnackbarWithButton();
+    });
     _setMarkerIcons();
     super.initState();
     getUserData();
     _loadInitialLocation();
     _startTimer();
   }
+
+  void _showSnackbarWithButton() async {
+    print("works snackbar");
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Expanded(
+              child: Text('New Alert Raised!'),
+            ),
+          ],
+        ),
+        duration: Duration(days: 1), // Change the duration as needed
+        action: SnackBarAction(
+          label: 'View',
+          onPressed: () {
+            _loadMarkers();
+            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+            _stopVibration();
+            _stopNotificationSound();
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => AdminAlertsPage(),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+    await _playNotificationSound();
+  }
+
+  Future<void> _playNotificationSound() async {
+    try {
+      await _audioPlayer.setAsset('assets/audios/emergency-alarm.mp3');
+      await _audioPlayer.play();
+      setState(() {
+        _isAudioPlaying = true;
+      });
+    } catch (e) {
+      print('Error playing audio: $e');
+    }
+  }
+  Future<void> _stopNotificationSound() async {
+    await _audioPlayer.stop();
+    setState(() {
+      _isAudioPlaying = false;
+    });
+  }
+
+
+  void _stopVibration() {
+    Vibration.cancel();
+  }
+
+
 
   @override
   void dispose() {
@@ -101,18 +174,18 @@ class _MapsPageState extends State<MapsPage> {
     });
   }
   void _getCurrentLocation() async {
-    // try {
-    //   // Request permission to access the device's location
-    //   await location.requestPermission();
-    //
-    //   // Get the current location of the user
-    //   LocationData currentLocation = await location.getLocation();
-    //   setState(() {
-    //     _currentLocation = LatLng(currentLocation.latitude!, currentLocation.longitude!);
-    //   });
-    // } catch (e) {
-    //   print('Error getting current location: $e');
-    // }
+    try {
+      // Request permission to access the device's location
+      await location.requestPermission();
+
+      // Get the current location of the user
+      LocationData currentLocation = await location.getLocation();
+      setState(() {
+        _currentLocation = LatLng(currentLocation.latitude!, currentLocation.longitude!);
+      });
+    } catch (e) {
+      print('Error getting current location: $e');
+    }
   }
 
   void _setMarkerIcons() async {

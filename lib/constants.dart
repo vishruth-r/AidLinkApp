@@ -1,3 +1,3 @@
 class Constants {
-  static const String apiUrl = 'http://159.89.171.121';
+  static const String apiUrl = 'https://resqapi.routefactory.com';
 }
