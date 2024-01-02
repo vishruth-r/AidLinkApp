@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:ui';
+import 'package:aidlink/screens/AM/ambulance_page.dart';
 import 'package:aidlink/screens/DR/admin_alerts_page.dart';
+import 'package:aidlink/screens/FR/view_alerts_fr.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -20,6 +22,7 @@ class MapsPage extends StatefulWidget {
 }
 
 class _MapsPageState extends State<MapsPage> {
+  late String? userType;
   bool _isDisposed = false;
   late TabController _tabController;
   FirebaseMessagingService _messagingService = FirebaseMessagingService();
@@ -28,7 +31,7 @@ class _MapsPageState extends State<MapsPage> {
 
   Timer? _timer;
   Location location = Location(); // Location object for getting current location
-  LatLng _currentLocation = LatLng(0, 0); // Initialize with a default location
+  LatLng _currentLocation = LatLng(13.077, 80.123); // Initialize with a default location
   String? dutyLocation;
   String? typeDescription;
   String? name;
@@ -60,21 +63,31 @@ class _MapsPageState extends State<MapsPage> {
 
   @override
   void initState() {
-
     _audioPlayer = AudioPlayer();
     _messagingService.onMessageReceived.listen((Map<String, dynamic> message) {
       print('New alert received: $message');
       _showSnackbarWithButton();
     });
-    _setMarkerIcons();
-    super.initState();
+    _initializeIconsAndLoadMap();
     getUserData();
     _loadInitialLocation();
     _startTimer();
+    super.initState();
+  }
+  Future<void> _initializeIconsAndLoadMap() async {
+
+    await _setMarkerIcons();
+
+    if (!_isDisposed) {
+      await Future.delayed(Duration(seconds: 10));
+      setState(() {
+        _loadMarkers();
+        _updateLocationButton();
+      });
+    }
   }
 
   void _showSnackbarWithButton() async {
-    print("works snackbar");
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -92,12 +105,31 @@ class _MapsPageState extends State<MapsPage> {
             ScaffoldMessenger.of(context).hideCurrentSnackBar();
             _stopVibration();
             _stopNotificationSound();
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => AdminAlertsPage(),
-              ),
-            );
+
+            if(userType == 'D') {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => AdminAlertsPage(),
+                ),
+              );
+            }
+            else if(userType == 'A') {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => AmbulancePage(),
+                ),
+              );
+            }
+            else if(userType == 'F') {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ViewAlertsFR(),
+                ),
+              );
+            }
           },
         ),
       ),
@@ -159,7 +191,8 @@ class _MapsPageState extends State<MapsPage> {
         _currentLocation = LatLng(latitude, longitude);
       });
     } else {
-      _getCurrentLocation();
+      print("could not get prev location");
+      //_getCurrentLocation();
     }
   }
 
@@ -170,38 +203,41 @@ class _MapsPageState extends State<MapsPage> {
       typeDescription = prefs.getString('type_description');
       name = prefs.getString('name');
       reportingTo = prefs.getString('reporting_to');
+      userType = prefs.getString('type');
 
     });
-  }
-  void _getCurrentLocation() async {
-    try {
-      // Request permission to access the device's location
-      await location.requestPermission();
 
-      // Get the current location of the user
-      LocationData currentLocation = await location.getLocation();
-      setState(() {
-        _currentLocation = LatLng(currentLocation.latitude!, currentLocation.longitude!);
-      });
-    } catch (e) {
-      print('Error getting current location: $e');
-    }
   }
+  //
+  // void _getCurrentLocation() async {
+  //   try {
+  //     // Request permission to access the device's location
+  //     await location.requestPermission();
+  //
+  //     // Get the current location of the user
+  //     LocationData currentLocation = await location.getLocation();
+  //     setState(() {
+  //       _currentLocation = LatLng(currentLocation.latitude!, currentLocation.longitude!);
+  //     });
+  //   } catch (e) {
+  //     print('Error getting current location: $e');
+  //   }
+  // }
 
-  void _setMarkerIcons() async {
-    _frIcon = await _getResizedIcon('assets/images/fr-icon.png', 96);
-    _frofflineIcon = await _getResizedIcon('assets/images/fr-offline-icon.png', 96);
-    _amIcon = await _getResizedIcon('assets/images/am-icon.png', 96);
-    _ambusyIcon = await _getResizedIcon('assets/images/am-busy-icon.png', 96);
-    _amofflineIcon = await _getResizedIcon('assets/images/am-offline-icon.png', 96);
-    _adIcon = await _getResizedIcon('assets/images/ad-icon.png', 96);
-    _al1Icon = await _getResizedIcon('assets/images/al1-icon.png', 96);
-    _al2Icon = await _getResizedIcon('assets/images/al2-icon.png', 96);
-    _al3Icon = await _getResizedIcon('assets/images/al3-icon.png', 96);
-    _al4Icon = await _getResizedIcon('assets/images/al4-icon.png', 96);
-    _wasIcon = await _getResizedIcon('assets/images/was-icon.png', 96);
-    _maIcon = await _getResizedIcon('assets/images/ma-icon.png', 96);
-    _asIcon = await _getResizedIcon('assets/images/as-icon.png', 96);
+  Future<void> _setMarkerIcons() async {
+    _frIcon = await _getResizedIcon('./assets/images/fr-icon.png', 96);
+    _frofflineIcon = await _getResizedIcon('./assets/images/fr-offline-icon.png', 96);
+    _amIcon = await _getResizedIcon('./assets/images/am-icon.png', 96);
+    _ambusyIcon = await _getResizedIcon('./assets/images/am-busy-icon.png', 96);
+    _amofflineIcon = await _getResizedIcon('./assets/images/am-offline-icon.png', 96);
+    _adIcon = await _getResizedIcon('./assets/images/ad-icon.png', 96);
+    _al1Icon = await _getResizedIcon('./assets/images/al1-icon.png', 96);
+    _al2Icon = await _getResizedIcon('./assets/images/al2-icon.png', 96);
+    _al3Icon = await _getResizedIcon('./assets/images/al3-icon.png', 96);
+    _al4Icon = await _getResizedIcon('./assets/images/al4-icon.png', 96);
+    _wasIcon = await _getResizedIcon('./assets/images/was-icon.png', 96);
+    _maIcon = await _getResizedIcon('./assets/images/ma-icon.png', 96);
+    _asIcon = await _getResizedIcon('./assets/images/as-icon.png', 96);
   }
 
   Future<BitmapDescriptor> _getResizedIcon(String imagePath, int size) async {
@@ -232,7 +268,7 @@ class _MapsPageState extends State<MapsPage> {
         final double longitude = lastKnownLocation[1];
         final String markerId = user['id'].toString();
         final String markerPhone = user['mobile'].toString();
-        final String markerTitle = user['name'].toString();
+        final String markerTitle = user['popuptext'].toString();
         final String markerType = user['statusicon'].toString();
 
         BitmapDescriptor markerIcon;
@@ -336,6 +372,12 @@ class _MapsPageState extends State<MapsPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Birds Eye View'),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+        ),
         actions: [
           IconButton(
             icon: Icon(Icons.refresh),
@@ -476,8 +518,10 @@ class _MapsPageState extends State<MapsPage> {
             markers: _markers,
             onMapCreated: (GoogleMapController controller) {
               _mapController = controller;
-              _loadMarkers();
+              Future.delayed(Duration(seconds: 5), () {
+                _loadMarkers();
               _updateLocationButton();
+              });
             },
             myLocationEnabled: true,
             myLocationButtonEnabled: _isLocationButtonEnabled,

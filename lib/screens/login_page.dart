@@ -2,7 +2,7 @@
   import 'package:aidlink/screens/DR/admin_alerts_page.dart';
   import 'package:flutter/material.dart';
   import '../services/login_services.dart';
-  import 'FR/home_page.dart';
+  import 'FR/raisealerts_page.dart';
 
   class LoginPage extends StatelessWidget {
     @override
@@ -87,7 +87,7 @@
                       Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => HomePage(),
+                          builder: (context) => RaiseAlertsPage(),
                         ),
                       );
                     } else if (userType == 'A') {

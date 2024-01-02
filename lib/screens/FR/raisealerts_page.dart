@@ -7,12 +7,12 @@ import 'package:flutter/cupertino.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../maps_page.dart';
-class HomePage extends StatefulWidget {
+class RaiseAlertsPage extends StatefulWidget {
   @override
-  _HomePageState createState() => _HomePageState();
+  _RaiseAlertsPageState createState() => _RaiseAlertsPageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _RaiseAlertsPageState extends State<RaiseAlertsPage> {
   String? dutyLocation;
   String? typeDescription;
   String? name;
@@ -38,7 +38,7 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Raise Alert'),
+        title: Text('Raise Alerts'),
         actions: [
           IconButton(
             icon: Icon(Icons.list),
@@ -125,15 +125,16 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
     ),
+
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            CustomSlideActionBtn(alertText: "Emergency Alert", bgColor: Colors.red),
+            CustomSlideActionBtn(alertText: "Emergency Alert", bgColor: Colors.redAccent),
             SizedBox(height: 20),
-            CustomSlideActionBtn(alertText: "Injury Alert", bgColor: Colors.orange),
+            CustomSlideActionBtn(alertText: "Injury Alert", bgColor: Colors.orangeAccent),
             SizedBox(height: 20),
-            CustomSlideActionBtn(alertText: "Dehydration Alert", bgColor: Colors.blue),
+            CustomSlideActionBtn(alertText: "Dehydration Alert", bgColor: Colors.blueAccent),
             SizedBox(height: 20),
             CustomSlideActionBtn(alertText: "Social Threat Alert", bgColor: Colors.green),
           ],
@@ -141,7 +142,6 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
-
 
   void _makePhoneCall(String phoneNumber) {
     // Implement your phone call functionality here
@@ -166,90 +166,110 @@ class CustomSlideActionBtn extends StatefulWidget {
 class _CustomSlideActionBtnState extends State<CustomSlideActionBtn> {
   final FRServices frServices = FRServices();
   bool _isPerformingAction = false;
+  double _dragValue = 0.0;
+  double _maxDragExtent = 355.0; // Adjust the maximum drag distance as needed
+  double _triggerThreshold = 0.9; // Adjust the trigger threshold (90%)
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onHorizontalDragUpdate: (details) {
+        setState(() {
+          _dragValue += details.primaryDelta!;
+          if (_dragValue < 0) {
+            _dragValue = 0;
+          } else if (_dragValue > _maxDragExtent) {
+            _dragValue = _maxDragExtent;
+          }
+        });
       },
       onHorizontalDragEnd: (_) async {
-        setState(() {
-          _isPerformingAction = true;
-        });
-        FRServices().sendAlert(type: getAlertType(widget.alertText));
-        setState(() {
-          _isPerformingAction = false;
-        });
-        int alertType = getAlertType(widget.alertText);
-        bool alertRaised = await frServices.sendAlert(type: alertType);
-        print("Action completed for ${widget.alertText}");
+        if (_dragValue >= (_maxDragExtent * _triggerThreshold)) {
+          setState(() {
+            _isPerformingAction = true;
+            _dragValue = 0.0; // Reset drag value after action completion
+          });
+          int alertType = getAlertType(widget.alertText);
+          bool alertRaised = await frServices.sendAlert(type: alertType);
 
-        if (alertRaised) {
-          String snackBarMessage = "Alert raised: ${widget.alertText}";
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(snackBarMessage),
-              duration: Duration(seconds: 2),
-            ),
-          );
+          setState(() {
+            _isPerformingAction = false;
+          });
 
-          print("Action completed for ${widget.alertText}");
+          // Show SnackBar if the alert is raised
+          if (alertRaised) {
+            String snackBarMessage = "Alert raised: ${widget.alertText}";
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(snackBarMessage),
+                duration: Duration(seconds: 2),
+              ),
+            );
+          }
+        } else {
+          // Reset the drag value if the action is not performed
+          setState(() {
+            _dragValue = 0.0;
+          });
         }
       },
       child: Padding(
         padding: const EdgeInsets.all(30),
-        child: Container(
-          width: 400,
-          height: 60,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            color: widget.bgColor,
-            boxShadow: const [
-              BoxShadow(
-                color: Colors.black26,
-                blurRadius: 8,
-              ),
-            ],
-          ),
-          child: Stack(
-            children: [
-              Positioned(
-                left: 0,
-                top: 0,
-                bottom: 0,
-                child: Container(
-                  width: 36,
-                  margin: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
+        child: Stack(
+          children: [
+            Container(
+              width: 400,
+              height: 60,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                color: widget.bgColor,
+                boxShadow: const [
+                  BoxShadow(
+                    color: Colors.black26,
+                    blurRadius: 8,
                   ),
-                  child: Center(
-                    child: _isPerformingAction
-                        ? const CupertinoActivityIndicator(
-                      color: Colors.black,
-                    )
-                        : const Icon(
-                      Icons.chevron_right,
-                      color: Colors.black,
+                ],
+              ),
+              child: Stack(
+                children: [
+                  Positioned(
+                    left: _dragValue,
+                    top: 0,
+                    bottom: 0,
+                    child: Container(
+                      width: 36,
+                      margin: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Center(
+                        child: _isPerformingAction
+                            ? const CupertinoActivityIndicator(
+                          color: Colors.black,
+                        )
+                            : const Icon(
+                          Icons.chevron_right,
+                          color: Colors.black,
+                        ),
+                      ),
                     ),
                   ),
-                ),
+                  Center(
+                    child: Text(
+                      _isPerformingAction ? "Loading..." : widget.alertText,
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ],
               ),
-              Center(
-                child: Text(
-                  _isPerformingAction ? "Loading..." : widget.alertText,
-                  style: TextStyle(color: Colors.white),
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
-
-
   }
+
   int getAlertType(String alertText) {
     switch (alertText) {
       case "Emergency Alert":

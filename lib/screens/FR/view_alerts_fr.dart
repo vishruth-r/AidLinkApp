@@ -1,4 +1,4 @@
-import 'package:aidlink/screens/FR/home_page.dart';
+import 'package:aidlink/screens/FR/raisealerts_page.dart';
 import 'package:flutter/material.dart';
 import '../../services/FR_services.dart';
 import '../maps_page.dart';
@@ -46,9 +46,9 @@ class _ViewAlertsFRState extends State<ViewAlertsFR> {
           IconButton(
             icon: Icon(Icons.warning),
             onPressed: () {
-              Navigator.push(
+              Navigator.pushReplacement(
                 context,
-                MaterialPageRoute(builder: (context) => HomePage()),
+                MaterialPageRoute(builder: (context) => RaiseAlertsPage()),
               );
             },
           ),

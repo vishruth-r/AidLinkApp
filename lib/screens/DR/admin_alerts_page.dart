@@ -319,8 +319,8 @@ class _AdminAlertsPageState extends State<AdminAlertsPage> {
                         IconButton(
                           icon: Icon(Icons.phone, color: Colors.green),
                           onPressed: () {
-                            print("Phone number: ${alert['FRmobile']}");
-                            String phone = '${alert['FRmobile']}';
+                            print("Phone number: ${alert['mobile']}");
+                            String phone = '${alert['mobile']}';
                             _makePhoneCall(phone);
                           },
                         ),
@@ -397,7 +397,7 @@ class _AdminAlertsPageState extends State<AdminAlertsPage> {
 
   void _makePhoneCall(String phoneNumber) async {
     print("Phone number: $phoneNumber");
-    String phoneUrl = 'tel: +91$phoneNumber';
+    String phoneUrl = 'tel: $phoneNumber';
     if (await canLaunch(phoneUrl)) {
       await launch(phoneUrl);
     } else {
