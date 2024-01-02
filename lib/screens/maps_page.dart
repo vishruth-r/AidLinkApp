@@ -75,11 +75,9 @@ class _MapsPageState extends State<MapsPage> {
     super.initState();
   }
   Future<void> _initializeIconsAndLoadMap() async {
-
-    await _setMarkerIcons();
+    await _setMarkerIcons(); // Wait for marker icons to be loaded
 
     if (!_isDisposed) {
-      await Future.delayed(Duration(seconds: 10));
       setState(() {
         _loadMarkers();
         _updateLocationButton();
@@ -225,20 +223,21 @@ class _MapsPageState extends State<MapsPage> {
   // }
 
   Future<void> _setMarkerIcons() async {
-    _frIcon = await _getResizedIcon('./assets/images/fr-icon.png', 96);
-    _frofflineIcon = await _getResizedIcon('./assets/images/fr-offline-icon.png', 96);
-    _amIcon = await _getResizedIcon('./assets/images/am-icon.png', 96);
-    _ambusyIcon = await _getResizedIcon('./assets/images/am-busy-icon.png', 96);
-    _amofflineIcon = await _getResizedIcon('./assets/images/am-offline-icon.png', 96);
-    _adIcon = await _getResizedIcon('./assets/images/ad-icon.png', 96);
-    _al1Icon = await _getResizedIcon('./assets/images/al1-icon.png', 96);
-    _al2Icon = await _getResizedIcon('./assets/images/al2-icon.png', 96);
-    _al3Icon = await _getResizedIcon('./assets/images/al3-icon.png', 96);
-    _al4Icon = await _getResizedIcon('./assets/images/al4-icon.png', 96);
-    _wasIcon = await _getResizedIcon('./assets/images/was-icon.png', 96);
-    _maIcon = await _getResizedIcon('./assets/images/ma-icon.png', 96);
-    _asIcon = await _getResizedIcon('./assets/images/as-icon.png', 96);
+    _frIcon = await BitmapDescriptor.fromAssetImage(ImageConfiguration(size: Size(30, 30)),'assets/images/fr-icon.png',);
+    _frofflineIcon = await BitmapDescriptor.fromAssetImage(ImageConfiguration(size: Size(30, 30)),'assets/images/fr-offline-icon.png',);
+    _amIcon = await BitmapDescriptor.fromAssetImage(ImageConfiguration(size: Size(30, 30)),'assets/images/am-icon.png',);
+    _ambusyIcon = await BitmapDescriptor.fromAssetImage(ImageConfiguration(size: Size(30, 30)),'assets/images/am-busy-icon.png',);
+    _amofflineIcon = await BitmapDescriptor.fromAssetImage(ImageConfiguration(size: Size(30, 30)),'assets/images/am-offline-icon.png',);
+    _adIcon = await BitmapDescriptor.fromAssetImage(ImageConfiguration(size: Size(30, 30)),'assets/images/ad-icon.png',);
+    _al1Icon = await BitmapDescriptor.fromAssetImage(ImageConfiguration(size: Size(30, 30)),'assets/images/al1-icon.png',);
+    _al2Icon = await BitmapDescriptor.fromAssetImage(ImageConfiguration(size: Size(30, 30)),'assets/images/al2-icon.png',);
+    _al3Icon = await BitmapDescriptor.fromAssetImage(ImageConfiguration(size: Size(30, 30)),'assets/images/al3-icon.png',);
+    _al4Icon = await BitmapDescriptor.fromAssetImage(ImageConfiguration(size: Size(30, 30)),'assets/images/al4-icon.png',);
+    _wasIcon = await BitmapDescriptor.fromAssetImage(ImageConfiguration(size: Size(30, 30)),'assets/images/was-icon.png',);
+    _maIcon = await BitmapDescriptor.fromAssetImage(ImageConfiguration(size: Size(30, 30)),'assets/images/ma-icon.png',);
+    _asIcon = await BitmapDescriptor.fromAssetImage(ImageConfiguration(size: Size(30, 30)),'assets/images/as-icon.png',);
   }
+
 
   Future<BitmapDescriptor> _getResizedIcon(String imagePath, int size) async {
     final ByteData data = await rootBundle.load(imagePath);
@@ -518,10 +517,8 @@ class _MapsPageState extends State<MapsPage> {
             markers: _markers,
             onMapCreated: (GoogleMapController controller) {
               _mapController = controller;
-              Future.delayed(Duration(seconds: 5), () {
-                _loadMarkers();
+              _loadMarkers();
               _updateLocationButton();
-              });
             },
             myLocationEnabled: true,
             myLocationButtonEnabled: _isLocationButtonEnabled,

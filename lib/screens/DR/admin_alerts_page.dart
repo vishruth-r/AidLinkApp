@@ -231,7 +231,7 @@ class _AdminAlertsPageState extends State<AdminAlertsPage> {
               indicatorColor: Colors.blue,
               indicatorWeight: 2.0,
               labelStyle: TextStyle(
-                fontWeight: FontWeight.bold, fontSize: 12
+                fontWeight: FontWeight.bold, fontSize: 10.0,
               ),
               tabs: [
                 Tab(text: 'Emergency',icon: Icon(Icons.warning, color: Colors.red)),
@@ -308,7 +308,7 @@ class _AdminAlertsPageState extends State<AdminAlertsPage> {
                         IconButton(
                           onPressed: () {
                             String latLong =
-                                '${alert['location'][1]},${alert['location'][0]}';
+                                '${alert['location'][0]},${alert['location'][1]}';
                             _launchMaps(latLong);
                           },
                           icon: Transform.rotate(

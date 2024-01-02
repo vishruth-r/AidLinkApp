@@ -1,5 +1,6 @@
 import 'package:aidlink/screens/FR/raisealerts_page.dart';
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../services/FR_services.dart';
 import '../maps_page.dart';
 
@@ -112,31 +113,72 @@ class _ViewAlertsFRState extends State<ViewAlertsFR> {
       itemCount: alerts.length,
       itemBuilder: (context, index) {
         final alert = alerts[index];
+        final ambulanceData = alert['ambulance'];
+        final hasAmbulanceData = ambulanceData != null && ambulanceData is Map;
+        final hasPhoneNumber = hasAmbulanceData && ambulanceData.containsKey('mobile');
+
         return Card(
           margin: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-          child: ListTile(
-            title: Text(
-              '${alert['title']}',
-              style: TextStyle(fontSize: 20),
-            ),
-            subtitle: Text(
-              '${alert['at']}',
-              style: TextStyle(fontSize: 16),
-            ),
-            trailing: Container(
-              padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-              decoration: BoxDecoration(
-                color: Color(int.parse(alert['statusColor'])),
-                borderRadius: BorderRadius.all(Radius.circular(20.0)),
-              ),
-              child: Text(
-                '${alert['statusdescription']}',
-                style: TextStyle(color: Colors.white),
-              ),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${alert['title']}',
+                      style: TextStyle(fontSize: 20),
+                    ),
+                    SizedBox(height: 8.0),
+                    Text(
+                      '${alert['at']}',
+                      style: TextStyle(fontSize: 16),
+                    ),
+                    SizedBox(height: 8.0),
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                      decoration: BoxDecoration(
+                        color: Color(int.parse(alert['statusColor'])),
+                        borderRadius: BorderRadius.all(Radius.circular(20.0)),
+                      ),
+                      child: Text(
+                        '${alert['statusdescription']}',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  ],
+                ),
+                if (hasPhoneNumber)
+                  GestureDetector(
+                    onTap: () {
+                      _makePhoneCall(ambulanceData['mobile']);
+                    },
+                    child: Icon(
+                      Icons.call,
+                      color: Colors.green, // Change the color as needed
+                      size: 30.0,
+                    ),
+                  ),
+              ],
             ),
           ),
         );
       },
     );
   }
+
+
+  void _makePhoneCall(String phoneNumber) async {
+    print("Phone number: $phoneNumber");
+    String phoneUrl = 'tel:$phoneNumber';
+    if (await canLaunch(phoneUrl)) {
+      await launch(phoneUrl);
+    } else {
+      throw 'Could not launch $phoneUrl';
+    }
+  }
+
 }
