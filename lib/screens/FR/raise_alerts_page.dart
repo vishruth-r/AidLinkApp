@@ -5,8 +5,9 @@ import 'package:aidlink/services/login_services.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
+import 'package:url_launcher/url_launcher.dart';
 import '../maps_page.dart';
+
 class RaiseAlertsPage extends StatefulWidget {
   @override
   _RaiseAlertsPageState createState() => _RaiseAlertsPageState();
@@ -38,10 +39,12 @@ class _RaiseAlertsPageState extends State<RaiseAlertsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Raise Alerts'),
+        backgroundColor: Colors.black87,
+        iconTheme: IconThemeData(color: Colors.white),
+        title: Text('Raise Alerts', style: TextStyle(color: Colors.white)),
         actions: [
           IconButton(
-            icon: Icon(Icons.list),
+            icon: Icon(Icons.list, color: Colors.white),
             onPressed: () {
               Navigator.push(
                 context,
@@ -50,7 +53,7 @@ class _RaiseAlertsPageState extends State<RaiseAlertsPage> {
             },
           ),
           IconButton(
-            icon: Icon(Icons.location_pin),
+            icon: Icon(Icons.location_pin,color: Colors.white),
             onPressed: () {
               Navigator.push(
                 context,
@@ -59,7 +62,8 @@ class _RaiseAlertsPageState extends State<RaiseAlertsPage> {
             },
           )
         ],
-      ),drawer: Drawer(
+      ),
+      drawer: Drawer(
       child: Column(
         children: [
           Expanded(
@@ -68,7 +72,7 @@ class _RaiseAlertsPageState extends State<RaiseAlertsPage> {
               children: [
                 DrawerHeader(
                   decoration: BoxDecoration(
-                    color: Colors.blue,
+                    color: Colors.black,
                   ),
                   child: UserAccountsDrawerHeader(
                     accountName: Text(
@@ -86,7 +90,7 @@ class _RaiseAlertsPageState extends State<RaiseAlertsPage> {
                       ),
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.blue,
+                      color: Colors.black,
                     ),
                   ),
                 ),
@@ -114,7 +118,7 @@ class _RaiseAlertsPageState extends State<RaiseAlertsPage> {
             leading: Icon(Icons.power_settings_new),
             title: Text('Logout'),
             onTap: () {
-              LoginService().logoutUser();
+              LoginService().logoutUser(context);
               Navigator.pushAndRemoveUntil(
                 context,
                 MaterialPageRoute(builder: (context) => LoginPage()),
@@ -136,21 +140,29 @@ class _RaiseAlertsPageState extends State<RaiseAlertsPage> {
             SizedBox(height: 20),
             CustomSlideActionBtn(alertText: "Dehydration Alert", bgColor: Colors.blueAccent),
             SizedBox(height: 20),
-            CustomSlideActionBtn(alertText: "Social Threat Alert", bgColor: Colors.green),
+            CustomSlideActionBtn(alertText: "Other Alert", bgColor: Colors.green),
           ],
         ),
       ),
     );
   }
 
-  void _makePhoneCall(String phoneNumber) {
-    // Implement your phone call functionality here
-    print("Making a phone call to $phoneNumber");
+  void _makePhoneCall(String phoneNumber) async {
+    String url = 'tel:$phoneNumber';
+    if (await canLaunch(url)) {
+      await launch(url);
+    } else {
+      throw 'Could not launch $url';
+    }
   }
 
-  void _launchMaps(String location) {
-    // Implement launching maps functionality here
-    print("Launching maps for location: $location");
+  void _launchMaps(String location) async {
+    String url = 'https://www.google.com/maps/search/?api=1&query=$location';
+    if (await canLaunch(url)) {
+      await launch(url);
+    } else {
+      throw 'Could not launch $url';
+    }
   }
 }
 class CustomSlideActionBtn extends StatefulWidget {
@@ -168,7 +180,7 @@ class _CustomSlideActionBtnState extends State<CustomSlideActionBtn> {
   bool _isPerformingAction = false;
   double _dragValue = 0.0;
   double _maxDragExtent = 355.0; // Adjust the maximum drag distance as needed
-  double _triggerThreshold = 0.9; // Adjust the trigger threshold (90%)
+  double _triggerThreshold = 0.8; // Adjust the trigger threshold (80%)
 
   @override
   Widget build(BuildContext context) {
@@ -190,7 +202,7 @@ class _CustomSlideActionBtnState extends State<CustomSlideActionBtn> {
             _dragValue = 0.0; // Reset drag value after action completion
           });
           int alertType = getAlertType(widget.alertText);
-          bool alertRaised = await frServices.sendAlert(type: alertType);
+          bool alertRaised = await frServices.sendAlert(type: alertType, context: context);
 
           setState(() {
             _isPerformingAction = false;
@@ -246,18 +258,18 @@ class _CustomSlideActionBtnState extends State<CustomSlideActionBtn> {
                       child: Center(
                         child: _isPerformingAction
                             ? const CupertinoActivityIndicator(
-                          color: Colors.black,
+                          color: Colors.black87,
                         )
                             : const Icon(
                           Icons.chevron_right,
-                          color: Colors.black,
+                          color: Colors.black87,
                         ),
                       ),
                     ),
                   ),
                   Center(
                     child: Text(
-                      _isPerformingAction ? "Loading..." : widget.alertText,
+                      _isPerformingAction ? "Raising Alert..." : widget.alertText,
                       style: TextStyle(color: Colors.white),
                     ),
                   ),
@@ -278,7 +290,7 @@ class _CustomSlideActionBtnState extends State<CustomSlideActionBtn> {
         return 2;
       case "Dehydration Alert":
         return 3;
-      case "Social Threat Alert":
+      case "Other Alert":
         return 4;
       default:
         return 0;

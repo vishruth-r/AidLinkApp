@@ -28,6 +28,7 @@ class _AmbulancePageState extends State<AmbulancePage> {
   void initState() {
     super.initState();
     _messagingService.onMessageReceived.listen((Map<String, dynamic> message) {
+
       fetchAlerts();
     });
     fetchAlerts();
@@ -45,7 +46,7 @@ class _AmbulancePageState extends State<AmbulancePage> {
   }
   void fetchAlerts() async {
     try {
-      List<dynamic> fetchedAlerts = await ambulanceServices.fetchAlerts();
+      List<dynamic> fetchedAlerts = await ambulanceServices.fetchAlerts(context);
       setState(() {
         alerts = fetchedAlerts;
       });
@@ -58,7 +59,9 @@ class _AmbulancePageState extends State<AmbulancePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Alerts'),
+          backgroundColor: Colors.black87,
+        iconTheme: IconThemeData(color: Colors.white),
+        title: Text('Alerts',style: TextStyle(color: Colors.white)),
           actions: [
           IconButton(
             icon: Icon(Icons.location_pin),
@@ -82,7 +85,7 @@ class _AmbulancePageState extends State<AmbulancePage> {
                 children: [
                   DrawerHeader(
                     decoration: BoxDecoration(
-                      color: Colors.blue,
+                      color: Colors.black,
                     ),
                     child: UserAccountsDrawerHeader(
                       accountName: Text(
@@ -100,7 +103,7 @@ class _AmbulancePageState extends State<AmbulancePage> {
                         ),
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.blue,
+                        color: Colors.black,
                       ),
                     ),
                   ),
@@ -128,17 +131,13 @@ class _AmbulancePageState extends State<AmbulancePage> {
               leading: Icon(Icons.power_settings_new),
               title: Text('Logout'),
               onTap: () {
-                LoginService().logoutUser();
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(builder: (context) => LoginPage()),
-                      (route) => false,
-                );
+                LoginService().logoutUser(context);
               },
             ),
           ],
         ),
-      ), body: alerts.isEmpty
+      ),
+      body: alerts.isEmpty
         ? Center(child: Text('No Alerts')) // Display "No Alerts" message when alerts list is empty
         : ListView.builder(
         itemCount: alerts.length,
@@ -150,7 +149,8 @@ class _AmbulancePageState extends State<AmbulancePage> {
           final statusColorHex = alert['statuscolor'];
           final typeDescription = alert['typedescription'];
 
-          final formattedTime = DateFormat('hh:mm a').format(alertTime);
+          final istTime = alertTime.toUtc().add(Duration(hours: 5, minutes: 30));
+          final formattedTime = DateFormat('hh:mm a').format(istTime);
 
           Color statusBackgroundColor = Colors.blue; // Default color
           if (statusColorHex != null && statusColorHex.isNotEmpty) {
@@ -246,6 +246,10 @@ class _AmbulancePageState extends State<AmbulancePage> {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      primary: Colors.black87,
+                      onPrimary: Colors.white,
+                    ),
                     onPressed: () {
                       // Perform action on 'Cancel' button click
                       Navigator.of(context).pop();
@@ -253,6 +257,10 @@ class _AmbulancePageState extends State<AmbulancePage> {
                     child: Text('Cancel'),
                   ),
                   ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      primary: Colors.black87,
+                      onPrimary: Colors.white,
+                    ),
                     onPressed: () async {
                       await ambulanceServices.updateAlertStatus(alertId, status);
                       Navigator.of(context).pop();

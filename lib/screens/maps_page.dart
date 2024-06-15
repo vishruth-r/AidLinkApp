@@ -259,6 +259,7 @@ class _MapsPageState extends State<MapsPage> {
         ad: showAD,
         al: showAL,
         as: showAS,
+        context: context,
       );
 
       for (final user in usersList!) {
@@ -356,7 +357,6 @@ class _MapsPageState extends State<MapsPage> {
         onTap: () {
           _makePhoneCall(markerPhone);
         },
-
       ),
       icon: icon,
     );
@@ -370,7 +370,9 @@ class _MapsPageState extends State<MapsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Birds Eye View'),
+        iconTheme: IconThemeData(color: Colors.white),
+        backgroundColor: Colors.black87,
+        title: Text('Birds Eye View',style: TextStyle(color: Colors.white)),
         leading: IconButton(
           icon: Icon(Icons.arrow_back),
           onPressed: () {
@@ -453,7 +455,7 @@ class _MapsPageState extends State<MapsPage> {
                 children: [
                   DrawerHeader(
                     decoration: BoxDecoration(
-                      color: Colors.blue,
+                      color: Colors.black,
                     ),
                     child: UserAccountsDrawerHeader(
                       accountName: Text(
@@ -471,7 +473,7 @@ class _MapsPageState extends State<MapsPage> {
                         ),
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.blue,
+                        color: Colors.black,
                       ),
                     ),
                   ),
@@ -499,7 +501,7 @@ class _MapsPageState extends State<MapsPage> {
               leading: Icon(Icons.power_settings_new),
               title: Text('Logout'),
               onTap: () {
-                LoginService().logoutUser();
+                LoginService().logoutUser(context);
                 Navigator.pushAndRemoveUntil(
                   context,
                   MaterialPageRoute(builder: (context) => LoginPage()),
@@ -522,6 +524,7 @@ class _MapsPageState extends State<MapsPage> {
             },
             myLocationEnabled: true,
             myLocationButtonEnabled: _isLocationButtonEnabled,
+            zoomControlsEnabled: false,
           ),
         ],
       ),

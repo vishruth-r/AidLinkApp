@@ -1,13 +1,15 @@
   import 'package:aidlink/screens/AM/ambulance_page.dart';
   import 'package:aidlink/screens/DR/admin_alerts_page.dart';
   import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
   import '../services/login_services.dart';
-  import 'FR/raisealerts_page.dart';
+  import 'FR/raise_alerts_page.dart';
 
   class LoginPage extends StatelessWidget {
     @override
     Widget build(BuildContext context) {
       return Scaffold(
+        resizeToAvoidBottomInset: false,
         body: Padding(
           padding: EdgeInsets.only(top: 120.0,right: 30,left: 30),
           child: LoginForm(),
@@ -47,8 +49,10 @@
             TextFormField(
               controller: _phoneController,
               maxLength: 10,
-              //dont display the max length to user
-              keyboardType: TextInputType.phone,
+              keyboardType: TextInputType.number,
+              inputFormatters: <TextInputFormatter>[
+                FilteringTextInputFormatter.digitsOnly
+              ],
               decoration: InputDecoration(
                 labelText: 'Mobile',
                 border: OutlineInputBorder(),
@@ -65,6 +69,11 @@
             ),
             SizedBox(height: 24.0),
             ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                primary: Colors.black87,
+                onPrimary: Colors.white,
+
+              ),
               onPressed: isLoading // Disable button when loading
                   ? null
                   : () async {
@@ -76,7 +85,7 @@
                 String password = _passwordController.text;
 
                 Map<String, String>? userData =
-                await loginService.loginUser(phone, password);
+                await loginService.loginUser(phone, password, context);
 
                 if (userData != null) {
                   String? userType = userData['type'];
@@ -136,13 +145,20 @@
               },
               child: isLoading
                   ? SizedBox(
-                width: 20,
-                height: 20,
+                width: 40,
+                height: 40,
                 child: CircularProgressIndicator(
                   valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                 ),
               )
-                  : Text('Login'),
+                  :
+              Container(
+                width: double.infinity,
+                height: 40,
+                child: Center(
+                  child: Text('Login', style: TextStyle(fontSize: 20)),
+                ),
+              ),
             ),
             SizedBox(height: 180.0),
             Image.asset(

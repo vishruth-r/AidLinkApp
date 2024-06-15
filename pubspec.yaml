@@ -51,7 +51,6 @@ dependencies:
   awesome_notifications: ^0.8.2
   palette_generator: ^0.3.3+3
   just_audio: ^0.9.36
-  latlong: ^0.6.1
   flutter_map: ^4.0.0
 
 dev_dependencies:

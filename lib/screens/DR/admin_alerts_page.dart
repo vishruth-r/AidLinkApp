@@ -42,9 +42,9 @@ class _AdminAlertsPageState extends State<AdminAlertsPage> {
     super.initState();
     _audioPlayer = AudioPlayer();
     _messagingService.onMessageReceived.listen((Map<String, dynamic> message) {
-      print('New alert received: $message');
+      print('New alert received: ${message["data"]["type"]}');
       _fetchAlerts();
-      _showSnackbarWithButton(); // Pass type from FCM message
+      _showSnackbarWithButton();
     });
     _fetchAlerts();
     getUserData();
@@ -56,6 +56,7 @@ class _AdminAlertsPageState extends State<AdminAlertsPage> {
     _isDisposed = true;
     super.dispose();
   }
+
   void _showSnackbarWithButton() async {
     print("works snackbar");
     ScaffoldMessenger.of(context).showSnackBar(
@@ -118,7 +119,7 @@ class _AdminAlertsPageState extends State<AdminAlertsPage> {
 
   Future<void> _fetchAlerts() async {
     try {
-      List<Map<String, dynamic>>? fetchedAlerts = await _frServices.getFRAlerts();
+      List<Map<String, dynamic>>? fetchedAlerts = await _frServices.getFRAlerts(context);
       if (!_isDisposed) {
         setState(() {
           if (fetchedAlerts != null) {
@@ -140,7 +141,9 @@ class _AdminAlertsPageState extends State<AdminAlertsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Alerts'),
+        iconTheme: IconThemeData(color: Colors.white),
+        backgroundColor: Colors.black87,
+        title: Text('Alerts',style: TextStyle(color: Colors.white)),
         actions: [
           IconButton(
             icon: Icon(Icons.location_pin),
@@ -164,7 +167,7 @@ class _AdminAlertsPageState extends State<AdminAlertsPage> {
               children: [
                 DrawerHeader(
                   decoration: BoxDecoration(
-                    color: Colors.blue,
+                    color: Colors.black,
                   ),
                   child: UserAccountsDrawerHeader(
                     accountName: Text(
@@ -182,7 +185,7 @@ class _AdminAlertsPageState extends State<AdminAlertsPage> {
                       ),
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.blue,
+                      color: Colors.black,
                     ),
                   ),
                 ),
@@ -210,7 +213,7 @@ class _AdminAlertsPageState extends State<AdminAlertsPage> {
             leading: Icon(Icons.power_settings_new),
             title: Text('Logout'),
             onTap: () async {
-              await LoginService().logoutUser();
+              await LoginService().logoutUser(context);
               Navigator.pushAndRemoveUntil(
                 context,
                 MaterialPageRoute(builder: (context) => LoginPage()),
@@ -228,10 +231,10 @@ class _AdminAlertsPageState extends State<AdminAlertsPage> {
             TabBar(
               labelColor: Colors.black,
               unselectedLabelColor: Colors.grey,
-              indicatorColor: Colors.blue,
+              indicatorColor: Colors.black87,
               indicatorWeight: 2.0,
               labelStyle: TextStyle(
-                fontWeight: FontWeight.bold, fontSize: 10.0,
+                fontWeight: FontWeight.bold, fontSize: 9.0,
               ),
               tabs: [
                 Tab(text: 'Emergency',icon: Icon(Icons.warning, color: Colors.red)),
@@ -239,7 +242,7 @@ class _AdminAlertsPageState extends State<AdminAlertsPage> {
                     icon: Icon(Icons.local_hospital, color: Colors.orange)),
                 Tab(text: 'Dehydration',
                     icon: Icon(Icons.water_drop_outlined, color: Colors.blue)),
-                Tab(text: 'Social Threat',
+                Tab(text: 'Others',
                     icon: Icon(Icons.group, color: Colors.green)),
               ],
             ),
@@ -344,6 +347,7 @@ class _AdminAlertsPageState extends State<AdminAlertsPage> {
                       ad: false,
                       al: false,
                       as: false,
+                      context: context,
                     );
                     showModalBottomSheet<void>(
                       context: context,
@@ -437,6 +441,10 @@ class _AdminAlertsPageState extends State<AdminAlertsPage> {
                 ),
               ),
               ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  primary: Colors.black87,
+                  onPrimary: Colors.white,
+                ),
                 onPressed: () {
                   int docstatusNo = docstatus!['status'];
                   String docstatusDescription = docstatus!['description'];
@@ -474,12 +482,18 @@ class _AdminAlertsPageState extends State<AdminAlertsPage> {
                     ],
                   ),
                   trailing: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      primary: Colors.black87,
+                      onPrimary: Colors.white,
+                    ),
+
                     onPressed: () async {
                       if (ambulance != null && alertID != null) {
                          String ambulanceID = ambulance['id'] ?? '';
                          await _mapService.assignAmbulanceToAlert(
                           alertID,
                           ambulanceID,
+                           context,
                         );
                       }
                       _fetchAlerts();
@@ -505,14 +519,21 @@ class _AdminAlertsPageState extends State<AdminAlertsPage> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  primary: Colors.black87,
+                  onPrimary: Colors.white,
+                ),
                 onPressed: () {Navigator.of(context).pop(); // Close the dialog
                 },
                 child: Text('Cancel'),
               ),
-
               ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  primary: Colors.black87,
+                  onPrimary: Colors.white,
+                ),
                 onPressed: () async {
-                  await _mapService.updateAlertStatus(alertId, docStatus);
+                  await _mapService.updateAlertStatus(alertId, docStatus, context);
                   _fetchAlerts();
                   Navigator.of(context).pop(); // Close the dialog
                 },

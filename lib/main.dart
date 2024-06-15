@@ -4,7 +4,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:aidlink/screens/AM/ambulance_page.dart';
-import 'package:aidlink/screens/FR/raisealerts_page.dart';
+import 'package:aidlink/screens/FR/raise_alerts_page.dart';
 import 'package:aidlink/screens/login_page.dart';
 import 'package:aidlink/services/fcm_services.dart';
 import 'package:aidlink/services/location_service.dart';
@@ -55,13 +55,13 @@ class MyApp extends StatelessWidget {
             if (snapshot.hasData) {
               print(snapshot.data);
               if (snapshot.data == 'F' || snapshot.data == 'R') {
-                LocationService().startSendingLocation();
+                LocationService().startSendingLocation(context);
                 return RaiseAlertsPage();
               } else if (snapshot.data == 'D') {
-                LocationService().startSendingLocation();
+                LocationService().startSendingLocation(context);
                 return AdminAlertsPage();
               } else if (snapshot.data == 'A') {
-                LocationService().startSendingLocation();
+                LocationService().startSendingLocation(context);
                 return AmbulancePage();
               } else {
                 return LoginPage();

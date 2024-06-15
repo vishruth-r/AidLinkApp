@@ -1,14 +1,16 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:location/location.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../constants.dart';
+import 'login_services.dart';
 class LocationService {
   late Timer _timer;
 
-  void startSendingLocation() async {
+  void startSendingLocation(BuildContext context) async {
     print("works till here start sending");
 
     _timer = Timer.periodic(Duration(seconds: 30), (timer) async {
@@ -21,52 +23,68 @@ class LocationService {
         return;
       }
 
-      _sendLocation(username!, authToken!, prefs);
-    });
-  }
+      LocationData locationData = await determineLocation();
 
-  void _sendLocation(String username, String authToken, SharedPreferences prefs) async {
-    LocationData locationData = await determineLocation();
-
-    final geocode = "${locationData.latitude},${locationData.longitude}";
-    final payload = jsonEncode({
-      "geocode": geocode,
-      "mobile": username,
-      "location": {
-        "lat": locationData.latitude,
-        "lng": locationData.longitude,
-      },
-    });
-    print("PAYLOAD");
-    print(payload);
-
-    try {
-      final Uri locationUri = Uri.parse("${Constants.apiUrl}/api/crfr/location/");
-
-      final response = await http.post(
-        locationUri,
-        body: payload,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $authToken',
+      final geocode = "${locationData.latitude},${locationData.longitude}";
+      final payload = jsonEncode({
+        "geocode": geocode,
+        "mobile": username,
+        "location": {
+          "lat": locationData.latitude,
+          "lng": locationData.longitude,
         },
-      );
+      });
+      print("PAYLOAD");
+      print(payload);
 
-      if (response.statusCode == 200) {
-        print("location sent");
-        print('Location sent successfully');
-        final locationString = "${locationData.latitude},${locationData.longitude}";
-        prefs.setString('user_location', locationString);
+      try {
+        final Uri locationUri = Uri.parse("${Constants.apiUrl}/api/crfr/location/");
 
-      } else {
-        print('Failed to send location. Status code: ${response.statusCode}');
-        print('Failed to send location');
+        final response = await http.post(
+          locationUri,
+          body: payload,
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $authToken',
+          },
+        );
+
+        if (response.statusCode == 200) {
+          print("location sent");
+          print('Location sent successfully');
+          final locationString = "${locationData.latitude},${locationData.longitude}";
+          prefs.setString('user_location', locationString);
+
+        } else if (response.statusCode == 401 || response.statusCode == 403) {
+          _timer.cancel();
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                title: Text('Error'),
+                content: Text('Your session has expired. Please login again.'),
+                actions: <Widget>[
+                  ElevatedButton(
+                    child: Text('OK'),
+                    onPressed: () async {
+                      Navigator.of(context).pop();
+                      LoginService().logoutUser(context);
+                    },
+                  ),
+                ],
+              );
+            },
+          );
+        }
+        else {
+          print('Failed to send location. Status code: ${response.statusCode}');
+          print('Failed to send location');
+        }
+      } catch (e) {
+        print('Error sending location: $e');
       }
-    } catch (e) {
-      print('Error sending location: $e');
-    }
+    });
   }
-
   Future<LocationData> determineLocation() async {
     print("calling fn");
     Location location = Location();

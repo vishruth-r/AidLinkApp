@@ -1,4 +1,8 @@
+import 'dart:js';
+
 import 'package:aidlink/constants.dart';
+import 'package:aidlink/services/login_services.dart';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -11,7 +15,7 @@ class AmbulanceServices {
     return prefs.getString('auth_token');
   }
 
-  Future<List<dynamic>> fetchAlerts() async {
+  Future<List<dynamic>> fetchAlerts(BuildContext context) async {
     final token = await getToken();
 
     if (token == null) {
@@ -33,9 +37,31 @@ class AmbulanceServices {
       } else {
         throw Exception('Invalid response format');
       }
+    }
+    if (response.statusCode == 401 || response.statusCode == 403) {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Error'),
+            content: Text('Your session has expired. Please login again.'),
+            actions: <Widget>[
+              ElevatedButton(
+                child: Text('OK'),
+                onPressed: () async {
+                  Navigator.of(context).pop();
+                  LoginService().logoutUser(context);
+                },
+              ),
+            ],
+          );
+        },
+      );
     } else {
       throw Exception('Failed to load alerts');
+      return [];
     }
+    return [];
   }
 
   Future<void> updateAlertStatus(String alertId, int status) async {

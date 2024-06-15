@@ -1,14 +1,17 @@
 import 'dart:convert';
+import 'dart:js';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:location/location.dart';
 import '../constants.dart';
+import '../screens/login_page.dart';
 import 'location_service.dart';
 
 class LoginService {
-  Future<Map<String, String>?> loginUser(String username, String password) async {
+  Future<Map<String, String>?> loginUser(String username, String password, BuildContext context) async {
     try {
       final Uri loginUri = Uri.parse("${Constants.apiUrl}/api/crfr/users/signin/");
 
@@ -47,7 +50,7 @@ class LoginService {
 
 
           if (authToken != null) {
-            LocationService().startSendingLocation();
+            LocationService().startSendingLocation(context as BuildContext);
           }
 
           return {'authToken': authToken, 'type': type};
@@ -80,7 +83,7 @@ class LoginService {
 
   }
 
-  Future<void> logoutUser() async {
+  Future<void> logoutUser(BuildContext context) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
 
     // Get the user token from SharedPreferences
@@ -109,22 +112,24 @@ class LoginService {
         body: requestBody,
       );
 
-      // Check if the request was successful (status code 200)
-      if (response.statusCode == 200) {
-        // Clear SharedPreferences data after successful logout API call
-        await prefs.remove('username');
-        await prefs.remove('type');
-        await prefs.remove('userid');
-        await prefs.remove('fcm_token');
-        await prefs.remove('auth_token');
-        await prefs.remove('duty_location');
-        await prefs.remove('name');
-        await prefs.remove('type_description');
-        await prefs.remove('reporting_to');
-      } else {
-        // Handle the case when the API call fails
-        print('Failed to logout. Status code: ${response.statusCode}');
-      }
+      // Clear SharedPreferences data after successful logout API call
+      await prefs.remove('username');
+      await prefs.remove('type');
+      await prefs.remove('userid');
+      await prefs.remove('fcm_token');
+      await prefs.remove('auth_token');
+      await prefs.remove('duty_location');
+      await prefs.remove('name');
+      await prefs.remove('type_description');
+      await prefs.remove('reporting_to');
+
+      // Navigate to the login page
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => LoginPage()),
+            (route) => false,
+      );
+
     } catch (e) {
       // Handle errors that occur during the logout process
       print('Error occurred while logging out: $e');

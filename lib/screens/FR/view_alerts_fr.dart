@@ -1,7 +1,10 @@
-import 'package:aidlink/screens/FR/raisealerts_page.dart';
+import 'package:aidlink/screens/FR/raise_alerts_page.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../services/FR_services.dart';
+import '../../services/login_services.dart';
+import '../login_page.dart';
 import '../maps_page.dart';
 
 class ViewAlertsFR extends StatefulWidget {
@@ -10,6 +13,10 @@ class ViewAlertsFR extends StatefulWidget {
 }
 
 class _ViewAlertsFRState extends State<ViewAlertsFR> {
+  String? dutyLocation;
+  String? typeDescription;
+  String? name;
+  String? reportingTo;
   FRServices _frServices = FRServices();
   List<Map<String, dynamic>> emergencyAlerts = [];
   List<Map<String, dynamic>> bleedingAlerts = [];
@@ -19,11 +26,23 @@ class _ViewAlertsFRState extends State<ViewAlertsFR> {
   @override
   void initState() {
     super.initState();
+    getUserData();
     _fetchAlerts();
   }
 
+  void getUserData() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      dutyLocation = prefs.getString('duty_location');
+      typeDescription = prefs.getString('type_description');
+      name = prefs.getString('name');
+      reportingTo = prefs.getString('reporting_to');
+    });
+  }
+
+
   Future<void> _fetchAlerts() async {
-    List<Map<String, dynamic>>? fetchedAlerts = await _frServices.getFRAlerts();
+    List<Map<String, dynamic>>? fetchedAlerts = await _frServices.getFRAlerts(context);
     if (fetchedAlerts != null) {
       setState(() {
         emergencyAlerts =
@@ -42,7 +61,9 @@ class _ViewAlertsFRState extends State<ViewAlertsFR> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('My Alerts'),
+        title: Text('My Alerts',style: TextStyle(color: Colors.white)),
+        backgroundColor: Colors.black87,
+        iconTheme: IconThemeData(color: Colors.white),
         actions: [
           IconButton(
             icon: Icon(Icons.warning),
@@ -64,6 +85,72 @@ class _ViewAlertsFRState extends State<ViewAlertsFR> {
           )
         ],
       ),
+      drawer: Drawer(
+        child: Column(
+          children: [
+            Expanded(
+              child: ListView(
+                padding: EdgeInsets.zero,
+                children: [
+                  DrawerHeader(
+                    decoration: BoxDecoration(
+                      color: Colors.black,
+                    ),
+                    child: UserAccountsDrawerHeader(
+                      accountName: Text(
+                        name ?? '', // Replace with the user's name from SharedPreferences
+                        style: TextStyle(
+                          fontSize: 24,
+                          color: Colors.white,
+                        ),
+                      ),
+                      accountEmail: Text(
+                        typeDescription ?? '', // Replace with the user's username from SharedPreferences
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.white,
+                        ),
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.black,
+                      ),
+                    ),
+                  ),
+                  ListTile(
+                    leading: Icon(Icons.call),
+                    title: Text('Helpdesk'),
+                    onTap: () {
+                      _makePhoneCall(reportingTo ?? '');
+                    },
+                  ),
+                  ListTile(
+                    leading: Icon(Icons.directions),
+                    title: Text('Assigned Location'),
+                    onTap: () {
+                      _launchMaps(dutyLocation ?? '');
+                    },
+                  ),
+                ],
+              ),
+            ),
+            Divider(
+              color: Colors.grey,
+            ),
+            ListTile(
+              leading: Icon(Icons.power_settings_new),
+              title: Text('Logout'),
+              onTap: () {
+                LoginService().logoutUser(context);
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (context) => LoginPage()),
+                      (route) => false,
+                );
+              },
+            ),
+          ],
+        ),
+      ),
       body:
       DefaultTabController(
         length: 4,
@@ -72,8 +159,11 @@ class _ViewAlertsFRState extends State<ViewAlertsFR> {
             TabBar(
               labelColor: Colors.black,
               unselectedLabelColor: Colors.grey,
-              indicatorColor: Colors.blue,
+              indicatorColor: Colors.black87,
               indicatorWeight: 2.0,
+              labelStyle: TextStyle(
+                fontWeight: FontWeight.bold, fontSize: 9.0,
+              ),
               tabs: [
                 Tab(text: 'Emergency',
                     icon: Icon(Icons.warning, color: Colors.red)),
@@ -81,7 +171,7 @@ class _ViewAlertsFRState extends State<ViewAlertsFR> {
                     icon: Icon(Icons.local_hospital, color: Colors.orange)),
                 Tab(text: 'Dehydration',
                     icon: Icon(Icons.water_drop_outlined, color: Colors.blue)),
-                Tab(text: 'Social Threat',
+                Tab(text: 'Others',
                     icon: Icon(Icons.group, color: Colors.green)),
               ],
             ),
@@ -181,4 +271,12 @@ class _ViewAlertsFRState extends State<ViewAlertsFR> {
     }
   }
 
+  void _launchMaps(String latLong) async {
+    String mapsUrl = 'https://www.google.com/maps/search/?api=1&query=$latLong';
+    if (await canLaunch(mapsUrl)) {
+      await launch(mapsUrl);
+    } else {
+      throw 'Could not launch $mapsUrl';
+    }
+  }
 }

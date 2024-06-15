@@ -1,16 +1,17 @@
 import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:location/location.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
-
-
 import '../constants.dart';
 import 'location_service.dart';
+import 'login_services.dart';
 
 class FRServices {
   Future<bool> sendAlert({
     required int type,
+    required BuildContext context,
   }) async {
     print('Sending alert of type $type');
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -47,10 +48,31 @@ class FRServices {
       print(response.body);
 
       if (response.statusCode == 200) {
-
         print('Alert sent successfully');
         return true;
-      } else {
+      }
+      else if (response.statusCode == 401 || response.statusCode == 403) {
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Text('Error'),
+              content: Text('Your session has expired. Please login again.'),
+              actions: <Widget>[
+                ElevatedButton(
+                  child: Text('OK'),
+                  onPressed: () async {
+                    Navigator.of(context).pop();
+                    LoginService().logoutUser(context);
+                  },
+                ),
+              ],
+            );
+          },
+        );
+        return false;
+      }
+      else {
 
         print('Failed to send alert. Status code: ${response.statusCode}');
         return false;
@@ -59,7 +81,8 @@ class FRServices {
       print('Exception while sending alert: $e');
     }
     return false;
-  }Future<List<Map<String, dynamic>>?> getFRAlerts() async {
+  }
+  Future<List<Map<String, dynamic>>?> getFRAlerts(BuildContext context) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString('auth_token');
     print('Token: $token');
@@ -79,7 +102,7 @@ class FRServices {
       );
 
       if (response.statusCode == 200) {
-          final List<dynamic> alerts = json.decode(response.body)['data'];
+        final List<dynamic> alerts = json.decode(response.body)['data'];
         List<Map<String, dynamic>> formattedAlerts = [];
 
         for (var alert in alerts) {
@@ -104,6 +127,27 @@ class FRServices {
 
         print('Formatted alerts: $formattedAlerts');
         return formattedAlerts;
+      }
+      else if (response.statusCode == 401 || response.statusCode == 403) {
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Text('Error'),
+              content: Text('Your session has expired. Please login again.'),
+              actions: <Widget>[
+                ElevatedButton(
+                  child: Text('OK'),
+                  onPressed: () async {
+                    Navigator.of(context).pop();
+                    LoginService().logoutUser(context);
+                  },
+                ),
+              ],
+            );
+          },
+        );
+        return null;
       } else {
         print('Failed to fetch alerts. Status code: ${response.statusCode}');
         return null; // Return null in case of failure
@@ -113,7 +157,6 @@ class FRServices {
       return null; // Return null in case of exceptions
     }
   }
-
   String formatDateTime(String dateTimeString) {
     DateTime dateTime = DateTime.parse(dateTimeString);
     return DateFormat('hh:mm a').format(dateTime.toLocal());
